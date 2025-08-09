@@ -33,14 +33,14 @@ ingress:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
   hosts:
-    - host: recipe-ai.k8s.blacktoaster.com
+    - host: recipes.k8s.blacktoaster.com
       paths:
         - path: /
           pathType: Prefix
   tls:
     - secretName: recipe-ai-tls
       hosts:
-        - recipe-ai.k8s.blacktoaster.com
+        - recipes.k8s.blacktoaster.com
 
 externalDNS:
   target: "pi5.k8s.blacktoaster.com"
@@ -54,7 +54,7 @@ certificate:
     kind: ClusterIssuer
     group: cert-manager.io
   dnsNames:
-    - recipe-ai.k8s.blacktoaster.com
+    - recipes.k8s.blacktoaster.com
 
 secrets:
   # For helm install --set, these will be automatically base64 encoded
