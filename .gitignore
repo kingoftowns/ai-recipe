@@ -26,6 +26,7 @@ venv/
 ENV/
 env/
 .venv
+.claude/
 
 # Flask
 instance/
@@ -37,7 +38,6 @@ instance/
 .env.*.local
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
