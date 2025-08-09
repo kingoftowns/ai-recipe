@@ -1,0 +1,74 @@
+# Default values for recipe-ai
+# This is a YAML-formatted file.
+
+namespace: recipe-ai
+
+image:
+  repository: registry.k8s.blacktoaster.com/ai-recipe/ai-recipe
+  tag: latest
+  pullPolicy: IfNotPresent
+
+deployment:
+  replicaCount: 1
+  containerPort: 8000
+  env:
+    FLASK_ENV: production
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+  hosts:
+    - host: recipe-ai.k8s.blacktoaster.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: recipe-ai-tls
+      hosts:
+        - recipe-ai.k8s.blacktoaster.com
+
+externalDNS:
+  target: "pi5.k8s.blacktoaster.com"
+
+certificate:
+  enabled: true
+  name: recipe-ai
+  commonName: recipe-ai.k8s.blacktoaster.com
+  issuerRef:
+    name: vault-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+  dnsNames:
+    - recipe-ai.k8s.blacktoaster.com
+
+secrets:
+  # For helm install --set, these will be automatically base64 encoded
+  anthropicApiKey: ""
+  secretKey: ""
+
+# Vault Secrets Operator configuration
+vaultSecretsOperator:
+  enabled: false
+  mount: "secret"
+  path: "recipe-ai/secrets"
+  refreshAfter: "30s"
+  vaultAuthRef: "default"
+
+# Override chart name if needed
+nameOverride: ""
+fullnameOverride: ""

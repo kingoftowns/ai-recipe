@@ -1,6 +1,6 @@
-# Recipe AI Generator
+# Don Miguel's Recipes
 
-An intelligent recipe generator powered by Claude AI that creates custom recipes based on available ingredients, dietary preferences, and cuisine styles.
+Don Miguel's traditional and modern recipe collection powered by Claude AI that creates custom recipes based on available ingredients, dietary preferences, and cuisine styles.
 
 ## Features
 
@@ -24,7 +24,7 @@ An intelligent recipe generator powered by Claude AI that creates custom recipes
 1. **Clone the repository**:
    ```bash
    git clone <repository-url>
-   cd recipe-ai
+   cd don-miguels-recipes
    ```
 
 2. **Set up environment variables**:
@@ -39,7 +39,7 @@ An intelligent recipe generator powered by Claude AI that creates custom recipes
 3. **Open in VS Code with DevContainer**:
    - Open VS Code
    - Press `F1` and select "Remote-Containers: Open Folder in Container"
-   - Select the `recipe-ai` folder
+   - Select the `don-miguels-recipes` folder
    - VS Code will build and start the devcontainer
 
 4. **Run the application**:
@@ -81,7 +81,7 @@ An intelligent recipe generator powered by Claude AI that creates custom recipes
 ## Project Structure
 
 ```
-recipe-ai/
+don-miguels-recipes/
 ├── .devcontainer/
 │   └── devcontainer.json    # DevContainer configuration
 ├── app/

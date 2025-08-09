@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Recipe AI Generator{% endblock %}</title>
+    <title>{% block title %}Don Miguel's Recipes{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -11,7 +11,7 @@
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <h1>🍳 Recipe AI Generator</h1>
+                <h1>🍳 Don Miguel's Recipes</h1>
             </div>
             <div class="nav-links">
                 <a href="/" class="nav-link">Home</a>
@@ -26,15 +26,15 @@
 
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2024 Recipe AI Generator. Powered by Claude AI.</p>
+            <p>&copy; 2024 Don Miguel's Recipes. Powered by Claude AI.</p>
         </div>
     </footer>
 
     <div id="aboutModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeAbout()">&times;</span>
-            <h2>About Recipe AI Generator</h2>
-            <p>This application uses Claude AI to generate creative and delicious recipes based on the ingredients you have available.</p>
+            <h2>About Don Miguel's Recipes</h2>
+            <p>Don Miguel's Recipes uses Claude AI to generate creative and delicious recipes based on the ingredients you have available, combining traditional flavors with modern innovation.</p>
             <p>Simply enter your ingredients, specify any dietary restrictions or preferences, and let AI create a custom recipe just for you!</p>
             <h3>Features:</h3>
             <ul>
