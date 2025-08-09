@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="hero-section">
+        <h2>Transform Your Ingredients into Delicious Recipes</h2>
+        <p>Enter the ingredients you have, and let AI create the perfect recipe for you!</p>
+    </div>
+
+    <div class="recipe-form-container">
+        <form id="recipeForm" class="recipe-form">
+            <div class="form-group">
+                <label for="ingredients">Available Ingredients *</label>
+                <textarea 
+                    id="ingredients" 
+                    name="ingredients" 
+                    placeholder="Enter ingredients separated by commas (e.g., chicken, rice, tomatoes, onions)"
+                    rows="4"
+                    required
+                ></textarea>
+                <small class="form-hint">Minimum 1 ingredient, maximum 20 ingredients</small>
+                <div id="ingredientsFeedback" class="feedback"></div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="dietary_restrictions">Dietary Restrictions</label>
+                    <select id="dietary_restrictions" name="dietary_restrictions">
+                        <option value="">None</option>
+                        <option value="vegetarian">Vegetarian</option>
+                        <option value="vegan">Vegan</option>
+                        <option value="gluten-free">Gluten-Free</option>
+                        <option value="dairy-free">Dairy-Free</option>
+                        <option value="keto">Keto</option>
+                        <option value="paleo">Paleo</option>
+                        <option value="low-carb">Low-Carb</option>
+                        <option value="nut-free">Nut-Free</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="cuisine_preference">Cuisine Preference</label>
+                    <select id="cuisine_preference" name="cuisine_preference">
+                        <option value="">Any Cuisine</option>
+                        <option value="italian">Italian</option>
+                        <option value="mexican">Mexican</option>
+                        <option value="chinese">Chinese</option>
+                        <option value="indian">Indian</option>
+                        <option value="japanese">Japanese</option>
+                        <option value="thai">Thai</option>
+                        <option value="mediterranean">Mediterranean</option>
+                        <option value="american">American</option>
+                        <option value="french">French</option>
+                        <option value="korean">Korean</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="serving_size">Serving Size</label>
+                    <input 
+                        type="number" 
+                        id="serving_size" 
+                        name="serving_size" 
+                        min="1" 
+                        max="12" 
+                        value="4"
+                    >
+                    <small class="form-hint">Number of servings</small>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" id="validateBtn" class="btn btn-secondary">
+                    Validate Ingredients
+                </button>
+                <button type="submit" id="generateBtn" class="btn btn-primary">
+                    Generate Recipe
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div id="loadingIndicator" class="loading-container" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Creating your perfect recipe...</p>
+    </div>
+
+    <div id="recipeResult" class="recipe-result" style="display: none;">
+        <div class="recipe-header">
+            <h3>Your Generated Recipe</h3>
+            <div class="recipe-actions">
+                <button onclick="saveRecipe()" class="btn btn-small btn-secondary">
+                    💾 Save
+                </button>
+                <button onclick="exportRecipe('txt')" class="btn btn-small btn-secondary">
+                    📄 Export as Text
+                </button>
+                <button onclick="exportRecipe('json')" class="btn btn-small btn-secondary">
+                    📋 Export as JSON
+                </button>
+                <button onclick="copyRecipe()" class="btn btn-small btn-secondary">
+                    📋 Copy to Clipboard
+                </button>
+            </div>
+        </div>
+        <div id="recipeContent" class="recipe-content"></div>
+        <div id="recipeMeta" class="recipe-meta"></div>
+    </div>
+
+    <div id="errorContainer" class="error-container" style="display: none;">
+        <div class="error-message">
+            <span class="error-icon">⚠️</span>
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+
+    <div id="successMessage" class="success-message" style="display: none;">
+        <span class="success-icon">✅</span>
+        <p id="successText"></p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentRecipeData = null;
+</script>
+{% endblock %}

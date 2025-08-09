@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Recipe AI Generator{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>🍳 Recipe AI Generator</h1>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Home</a>
+                <a href="#" class="nav-link" onclick="showAbout()">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Recipe AI Generator. Powered by Claude AI.</p>
+        </div>
+    </footer>
+
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAbout()">&times;</span>
+            <h2>About Recipe AI Generator</h2>
+            <p>This application uses Claude AI to generate creative and delicious recipes based on the ingredients you have available.</p>
+            <p>Simply enter your ingredients, specify any dietary restrictions or preferences, and let AI create a custom recipe just for you!</p>
+            <h3>Features:</h3>
+            <ul>
+                <li>AI-powered recipe generation</li>
+                <li>Dietary restriction support</li>
+                <li>Cuisine preference selection</li>
+                <li>Adjustable serving sizes</li>
+                <li>Save and export recipes</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
