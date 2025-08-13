@@ -173,6 +173,23 @@
         <div id="recipeMeta" class="recipe-meta"></div>
     </div>
 
+    <!-- Saved Recipes Section -->
+    <div class="mdc-card saved-recipes-card mdc-elevation--z2">
+        <div class="recipe-header">
+            <h3 class="mdc-typography--headline5">Saved Recipes</h3>
+            <div class="recipe-actions">
+                <button onclick="loadSavedRecipes()" class="mdc-button mdc-button--outlined">
+                    <span class="mdc-button__ripple"></span>
+                    <i class="material-icons mdc-button__icon" aria-hidden="true">refresh</i>
+                    <span class="mdc-button__label">Refresh</span>
+                </button>
+            </div>
+        </div>
+        <div id="savedRecipesList" class="saved-recipes-list">
+            <div class="loading-message">Click "Refresh" to load your saved recipes</div>
+        </div>
+    </div>
+
     <!-- Error Snackbar -->
     <div id="errorContainer" class="mdc-snackbar" data-mdc-auto-init="MDCSnackbar">
         <div class="mdc-snackbar__surface">
@@ -194,8 +211,6 @@
 
 {% block scripts %}
 <script>
-    let currentRecipeData = null;
-    
     // Re-initialize MDC components after DOM update
     document.addEventListener('DOMContentLoaded', function() {
         mdc.autoInit();

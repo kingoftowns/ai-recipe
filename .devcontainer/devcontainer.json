@@ -1,9 +1,7 @@
 {
   "name": "Don Miguel's Recipes",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".."
-  },
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
   "features": {
     "ghcr.io/devcontainers/features/python:1": {
       "version": "3.11"
@@ -42,13 +40,17 @@
       }
     }
   },
-  "postCreateCommand": "echo 'Environment ready!'",
+  "postCreateCommand": "pip install -r requirements.txt && echo 'Dependencies installed!' && sleep 5 && FLASK_APP=app.py flask db upgrade && echo 'Database migrations completed!' && echo 'Environment ready!'",
   "postStartCommand": "echo 'Welcome to Don Miguel\'s Recipes! Run \"flask run\" to start the application.'",
-  "forwardPorts": [8000],
+  "forwardPorts": [8000, 5432],
   "portsAttributes": {
     "8000": {
       "label": "Flask App",
       "onAutoForward": "notify"
+    },
+    "5432": {
+      "label": "PostgreSQL",
+      "onAutoForward": "silent"
     }
   },
   "remoteUser": "vscode",
@@ -59,6 +61,7 @@
   "env": {
     "FLASK_APP": "app.py",
     "FLASK_ENV": "development",
-    "FLASK_DEBUG": "1"
+    "FLASK_DEBUG": "1",
+    "DATABASE_URL": "postgresql://recipe_user:recipe_dev_password@postgres:5432/recipe_db"
   }
 }

@@ -178,6 +178,7 @@ async function saveRecipe() {
     }
     
     try {
+        console.log('Saving recipe with data:', currentRecipeData);
         const response = await fetch('/save_recipe', {
             method: 'POST',
             headers: {
@@ -186,14 +187,19 @@ async function saveRecipe() {
             body: JSON.stringify({ recipe_data: currentRecipeData })
         });
         
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        
         const data = await response.json();
+        console.log('Response data:', data);
         
         if (response.ok) {
-            showSuccess(`Recipe saved as ${data.filename}`);
+            showSuccess(data.message || `Recipe "${data.title}" saved successfully`);
         } else {
             showError(data.error || 'Failed to save recipe');
         }
     } catch (error) {
+        console.error('Error in saveRecipe:', error);
         showError('Failed to save recipe');
     }
 }
@@ -270,6 +276,111 @@ ${currentRecipeData.recipe}`;
     }
 }
 
+// Load saved recipes
+async function loadSavedRecipes() {
+    const container = document.getElementById('savedRecipesList');
+    container.innerHTML = '<div class="loading-message">Loading saved recipes...</div>';
+    
+    try {
+        const response = await fetch('/api/recipes?per_page=20');
+        const data = await response.json();
+        
+        if (response.ok) {
+            displaySavedRecipes(data.recipes);
+        } else {
+            container.innerHTML = '<div class="error-message">Failed to load recipes</div>';
+        }
+    } catch (error) {
+        container.innerHTML = '<div class="error-message">Error loading recipes</div>';
+        console.error('Error loading saved recipes:', error);
+    }
+}
+
+// Display saved recipes
+function displaySavedRecipes(recipes) {
+    const container = document.getElementById('savedRecipesList');
+    
+    if (!recipes || recipes.length === 0) {
+        container.innerHTML = '<div class="no-recipes-message">No saved recipes found. Save some recipes to see them here!</div>';
+        return;
+    }
+    
+    const recipesHTML = recipes.map(recipe => `
+        <div class="saved-recipe-item mdc-card mdc-elevation--z1" onclick="viewSavedRecipe(${recipe.id})">
+            <div class="saved-recipe-header">
+                <h4 class="mdc-typography--headline6">${recipe.title}</h4>
+                <div class="saved-recipe-actions">
+                    <button onclick="event.stopPropagation(); deleteSavedRecipe(${recipe.id})" class="mdc-icon-button material-icons" title="Delete recipe">
+                        delete
+                    </button>
+                </div>
+            </div>
+            <div class="saved-recipe-meta">
+                <div><i class="material-icons">kitchen</i> ${recipe.ingredients_used}</div>
+                <div><i class="material-icons">schedule</i> ${new Date(recipe.timestamp).toLocaleDateString()}</div>
+                ${recipe.dietary_restrictions ? `<div><i class="material-icons">health_and_safety</i> ${recipe.dietary_restrictions}</div>` : ''}
+            </div>
+        </div>
+    `).join('');
+    
+    container.innerHTML = recipesHTML;
+}
+
+// View a saved recipe
+async function viewSavedRecipe(recipeId) {
+    try {
+        const response = await fetch(`/api/recipes/${recipeId}`);
+        const recipe = await response.json();
+        
+        if (response.ok) {
+            // Convert saved recipe format to current recipe format
+            currentRecipeData = {
+                recipe: recipe.recipe,
+                timestamp: recipe.timestamp,
+                ingredients_used: recipe.ingredients_used,
+                dietary_restrictions: recipe.dietary_restrictions,
+                cuisine_preference: recipe.cuisine_preference,
+                serving_size: recipe.serving_size
+            };
+            
+            displayRecipe(currentRecipeData);
+            showElement('recipeResult');
+            
+            // Scroll to recipe result
+            document.getElementById('recipeResult').scrollIntoView({ behavior: 'smooth' });
+            showSuccess(`Loaded recipe: ${recipe.title}`);
+        } else {
+            showError('Failed to load recipe');
+        }
+    } catch (error) {
+        showError('Error loading recipe');
+        console.error('Error loading recipe:', error);
+    }
+}
+
+// Delete a saved recipe
+async function deleteSavedRecipe(recipeId) {
+    if (!confirm('Are you sure you want to delete this recipe?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/recipes/${recipeId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            showSuccess('Recipe deleted successfully');
+            loadSavedRecipes(); // Refresh the list
+        } else {
+            showError('Failed to delete recipe');
+        }
+    } catch (error) {
+        showError('Error deleting recipe');
+        console.error('Error deleting recipe:', error);
+    }
+}
+
 // Utility functions
 function showElement(id) {
     const element = document.getElementById(id);
@@ -306,7 +417,7 @@ function showError(message) {
 function showSuccess(message) {
     if (mdcComponents.successSnackbar) {
         mdcComponents.successSnackbar.labelText = message;
-        mdcComponents.successSnackbar.timeoutMs = 3000;
+        mdcComponents.successSnackbar.timeoutMs = 4000;
         mdcComponents.successSnackbar.open();
     } else {
         // Fallback if snackbar not initialized

@@ -62,6 +62,27 @@ secrets:
   anthropicApiKey: ""
   secretKey: ""
 
+# PostgreSQL Database configuration
+postgres:
+  enabled: true
+  database: "recipe_db"
+  username: "recipe_user"
+  password: "recipe_password_change_me"  # Change this in production!
+  
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  
+  persistence:
+    enabled: true
+    size: 2Gi
+    accessMode: ReadWriteOnce
+    # storageClass: ""  # Use default storage class
+
 # Vault Secrets Operator configuration
 vaultSecretsOperator:
   enabled: false

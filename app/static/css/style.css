@@ -538,3 +538,88 @@ body {
 .mdc-elevation--z8 {
     box-shadow: 0px 5px 5px -3px rgba(0, 0, 0, 0.2), 0px 8px 10px 1px rgba(0, 0, 0, 0.14), 0px 3px 14px 2px rgba(0, 0, 0, 0.12);
 }
+
+/* Saved Recipes Styles */
+.saved-recipes-card {
+    margin-top: 24px;
+    padding: 24px;
+}
+
+.saved-recipes-list {
+    margin-top: 16px;
+}
+
+.saved-recipe-item {
+    margin-bottom: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-left: 4px solid var(--mdc-theme-primary);
+}
+
+.saved-recipe-item:hover {
+    background-color: var(--mdc-theme-primary-container);
+    transform: translateX(4px);
+}
+
+.saved-recipe-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.saved-recipe-header h4 {
+    margin: 0;
+    color: var(--mdc-theme-on-surface);
+}
+
+.saved-recipe-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.saved-recipe-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 14px;
+    color: var(--mdc-theme-on-surface-variant);
+}
+
+.saved-recipe-meta div {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.saved-recipe-meta .material-icons {
+    font-size: 16px;
+}
+
+.loading-message,
+.error-message,
+.no-recipes-message {
+    text-align: center;
+    padding: 32px;
+    color: var(--mdc-theme-on-surface-variant);
+    font-style: italic;
+}
+
+.error-message {
+    color: var(--mdc-theme-error);
+}
+
+/* Responsive design for saved recipes */
+@media (max-width: 768px) {
+    .saved-recipe-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .saved-recipe-meta {
+        flex-direction: column;
+        gap: 8px;
+    }
+}

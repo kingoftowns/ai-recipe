@@ -6,8 +6,10 @@ from datetime import datetime
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request, send_file
 from flask_cors import CORS
+from flask_migrate import Migrate
 
 import config as cfg
+from models import db, Recipe
 
 load_dotenv()
 
@@ -15,6 +17,14 @@ app = Flask(__name__, template_folder='app/templates',
             static_folder='app/static')
 CORS(app)
 app.config['SECRET_KEY'] = cfg.APP_SECRET_KEY
+app.config['SQLALCHEMY_DATABASE_URI'] = cfg.SQLALCHEMY_DATABASE_URI
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = cfg.SQLALCHEMY_TRACK_MODIFICATIONS
+
+# Initialize database
+db.init_app(app)
+
+# Initialize Flask-Migrate
+migrate = Migrate(app, db)
 
 # Lazy load the anthropic client to avoid initialization issues
 client = None
@@ -106,17 +116,30 @@ def save_recipe():
         if not recipe_data:
             return jsonify({'error': 'No recipe data provided'}), 400
 
-        filename = f"recipe_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        filepath = os.path.join('saved_recipes', filename)
+        # Extract title from recipe content
+        title = Recipe.extract_title_from_content(recipe_data.get('recipe', ''))
+        
+        # Create new recipe
+        recipe = Recipe(
+            title=title,
+            recipe_content=recipe_data.get('recipe', ''),
+            ingredients_used=recipe_data.get('ingredients_used', ''),
+            dietary_restrictions=recipe_data.get('dietary_restrictions'),
+            cuisine_preference=recipe_data.get('cuisine_preference'),
+            serving_size=recipe_data.get('serving_size', 4)
+        )
+        
+        db.session.add(recipe)
+        db.session.commit()
 
-        os.makedirs('saved_recipes', exist_ok=True)
-
-        with open(filepath, 'w') as f:
-            json.dump(recipe_data, f, indent=2)
-
-        return jsonify({'message': 'Recipe saved successfully', 'filename': filename})
+        return jsonify({
+            'message': 'Recipe saved successfully', 
+            'recipe_id': recipe.id,
+            'title': recipe.title
+        })
 
     except Exception as e:
+        db.session.rollback()
         return jsonify({'error': f'Failed to save recipe: {str(e)}'}), 500
 
 
@@ -196,6 +219,70 @@ def validate_ingredients():
 
     except Exception as e:
         return jsonify({'valid': False, 'message': f'Validation error: {str(e)}'})
+
+
+@app.route('/api/recipes', methods=['GET'])
+def get_recipes():
+    """Get all saved recipes with pagination and filtering"""
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        search = request.args.get('search', '', type=str)
+        
+        query = Recipe.query
+        
+        # Filter by search term if provided
+        if search:
+            query = query.filter(
+                db.or_(
+                    Recipe.title.contains(search),
+                    Recipe.ingredients_used.contains(search),
+                    Recipe.dietary_restrictions.contains(search),
+                    Recipe.cuisine_preference.contains(search)
+                )
+            )
+        
+        # Order by most recent
+        query = query.order_by(Recipe.created_at.desc())
+        
+        # Paginate
+        recipes = query.paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        return jsonify({
+            'recipes': [recipe.to_dict() for recipe in recipes.items],
+            'total': recipes.total,
+            'pages': recipes.pages,
+            'current_page': page,
+            'per_page': per_page
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to fetch recipes: {str(e)}'}), 500
+
+
+@app.route('/api/recipes/<int:recipe_id>', methods=['GET'])
+def get_recipe(recipe_id):
+    """Get a specific recipe by ID"""
+    try:
+        recipe = Recipe.query.get_or_404(recipe_id)
+        return jsonify(recipe.to_dict())
+    except Exception as e:
+        return jsonify({'error': f'Recipe not found: {str(e)}'}), 404
+
+
+@app.route('/api/recipes/<int:recipe_id>', methods=['DELETE'])
+def delete_recipe(recipe_id):
+    """Delete a specific recipe"""
+    try:
+        recipe = Recipe.query.get_or_404(recipe_id)
+        db.session.delete(recipe)
+        db.session.commit()
+        return jsonify({'message': 'Recipe deleted successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Failed to delete recipe: {str(e)}'}), 500
 
 
 if __name__ == '__main__':
