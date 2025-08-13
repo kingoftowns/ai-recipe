@@ -169,6 +169,17 @@
         </div>
         <div id="recipeContent" class="recipe-content mdc-typography--body1"></div>
         <div id="recipeMeta" class="recipe-meta"></div>
+        <div id="recipeRating" class="recipe-rating" style="display: none;">
+            <h4 class="mdc-typography--headline6">Rate this Recipe</h4>
+            <div class="star-rating-interactive">
+                <i class="material-icons star-interactive" data-rating="1">star_border</i>
+                <i class="material-icons star-interactive" data-rating="2">star_border</i>
+                <i class="material-icons star-interactive" data-rating="3">star_border</i>
+                <i class="material-icons star-interactive" data-rating="4">star_border</i>
+                <i class="material-icons star-interactive" data-rating="5">star_border</i>
+            </div>
+            <div id="ratingMessage" class="rating-message"></div>
+        </div>
     </div>
 
     <!-- Saved Recipes Section -->
@@ -195,6 +206,15 @@
                         <label for="recipeSearch" class="mdc-floating-label">Search recipes</label>
                     </div>
                     <div class="mdc-notched-outline__trailing"></div>
+                </div>
+            </div>
+            
+            <!-- Star Rating Filter -->
+            <div class="filter-container">
+                <label class="filter-label">Filter by rating:</label>
+                <div class="star-filter">
+                    <button class="star-filter-btn" data-rating="4">4★+</button>
+                    <button class="star-filter-btn" data-rating="5">5★</button>
                 </div>
             </div>
         </div>

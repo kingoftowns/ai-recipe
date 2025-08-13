@@ -377,6 +377,7 @@ func (h *Handler) GetRecipes(c *gin.Context) {
 		perPage = 10
 	}
 	search := c.Query("search")
+	minRating := c.Query("min_rating")
 
 	offset := (page.(int) - 1) * perPage.(int)
 
@@ -386,6 +387,10 @@ func (h *Handler) GetRecipes(c *gin.Context) {
 		searchPattern := "%" + search + "%"
 		query = query.Where("title ILIKE ? OR recipe_content ILIKE ?",
 			searchPattern, searchPattern)
+	}
+
+	if minRating != "" {
+		query = query.Where("rating >= ?", minRating)
 	}
 
 	var total int64
@@ -444,6 +449,46 @@ func (h *Handler) DeleteRecipe(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Recipe deleted successfully"})
+}
+
+func (h *Handler) UpdateRecipeRating(c *gin.Context) {
+	id, exists := c.Get("id")
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid recipe ID"})
+		return
+	}
+
+	var req struct {
+		Rating int `json:"rating"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	if req.Rating < 1 || req.Rating > 5 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Rating must be between 1 and 5 stars"})
+		return
+	}
+
+	// Update only the rating field
+	if err := h.db.Model(&models.Recipe{}).Where("id = ?", id.(uint)).Update("rating", req.Rating).Error; err != nil {
+		logrus.WithError(err).Error("Failed to update recipe rating")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update recipe rating"})
+		return
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"recipe_id": id.(uint),
+		"rating":    req.Rating,
+		"ip":        c.ClientIP(),
+	}).Info("Recipe rating updated successfully")
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Recipe rating updated successfully",
+		"rating":  req.Rating,
+	})
 }
 
 func (h *Handler) callAnthropicAPI(prompt string) (string, error) {

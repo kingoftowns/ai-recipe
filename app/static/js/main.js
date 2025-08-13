@@ -53,6 +53,9 @@ document.getElementById('ingredients').addEventListener('input', debounce(async 
     }
 }, 500));
 
+// Global variable for current rating filter
+let currentRatingFilter = '';
+
 // Real-time recipe search
 document.addEventListener('DOMContentLoaded', () => {
     // Add event listener after DOM is loaded
@@ -61,9 +64,33 @@ document.addEventListener('DOMContentLoaded', () => {
         if (searchField) {
             searchField.addEventListener('input', debounce(async () => {
                 const searchTerm = searchField.value.trim();
-                await searchSavedRecipes(searchTerm);
+                await searchSavedRecipes(searchTerm, currentRatingFilter);
             }, 300));
         }
+        
+        // Add star filter event listeners - toggle behavior
+        const starFilterBtns = document.querySelectorAll('.star-filter-btn');
+        starFilterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const isCurrentlyActive = btn.classList.contains('active');
+                
+                // Remove active state from all buttons
+                starFilterBtns.forEach(b => b.classList.remove('active'));
+                
+                if (isCurrentlyActive) {
+                    // If clicking the same button, turn off the filter
+                    currentRatingFilter = '';
+                } else {
+                    // If clicking a different button or no button was active, activate this filter
+                    btn.classList.add('active');
+                    currentRatingFilter = btn.dataset.rating;
+                }
+                
+                // Update search results
+                const searchTerm = document.getElementById('recipeSearch').value.trim();
+                searchSavedRecipes(searchTerm, currentRatingFilter);
+            });
+        });
     }, 100);
 });
 
@@ -292,11 +319,16 @@ ${currentRecipeData.recipe}`;
 
 // Load saved recipes
 async function loadSavedRecipes() {
-    // Clear search field when loading all recipes
+    // Clear search field and rating filter when loading all recipes
     const searchField = document.getElementById('recipeSearch');
     if (searchField) {
         searchField.value = '';
     }
+    
+    // Reset rating filter
+    currentRatingFilter = '';
+    const starFilterBtns = document.querySelectorAll('.star-filter-btn');
+    starFilterBtns.forEach(btn => btn.classList.remove('active'));
     
     const container = document.getElementById('savedRecipesList');
     container.innerHTML = '<div class="loading-message">Loading saved recipes...</div>';
@@ -317,10 +349,10 @@ async function loadSavedRecipes() {
 }
 
 // Search saved recipes with real-time results
-async function searchSavedRecipes(searchTerm) {
+async function searchSavedRecipes(searchTerm, ratingFilter = '') {
     const container = document.getElementById('savedRecipesList');
     
-    if (!searchTerm) {
+    if (!searchTerm && !ratingFilter) {
         container.innerHTML = '<div class="loading-message">Start typing to search recipes, or click "Load All" to see all saved recipes</div>';
         return;
     }
@@ -328,14 +360,37 @@ async function searchSavedRecipes(searchTerm) {
     container.innerHTML = '<div class="loading-message">Searching recipes...</div>';
     
     try {
-        const response = await fetch(`/api/recipes?search=${encodeURIComponent(searchTerm)}&per_page=50`);
+        let url = '/api/recipes?per_page=50';
+        const params = new URLSearchParams();
+        
+        if (searchTerm) {
+            params.append('search', searchTerm);
+        }
+        if (ratingFilter) {
+            params.append('min_rating', ratingFilter);
+        }
+        
+        if (params.toString()) {
+            url += '&' + params.toString();
+        }
+        
+        const response = await fetch(url);
         const data = await response.json();
         
         if (response.ok) {
             if (data.recipes && data.recipes.length > 0) {
                 displaySavedRecipes(data.recipes, searchTerm);
             } else {
-                container.innerHTML = `<div class="no-recipes-message">No recipes found for "${searchTerm}". Try different keywords!</div>`;
+                let message = 'No recipes found';
+                if (searchTerm && ratingFilter) {
+                    message += ` for "${searchTerm}" with ${ratingFilter}+ stars`;
+                } else if (searchTerm) {
+                    message += ` for "${searchTerm}"`;
+                } else if (ratingFilter) {
+                    message += ` with ${ratingFilter}+ stars`;
+                }
+                message += '. Try different filters!';
+                container.innerHTML = `<div class="no-recipes-message">${message}</div>`;
             }
         } else {
             container.innerHTML = '<div class="error-message">Failed to search recipes</div>';
@@ -366,6 +421,21 @@ function displaySavedRecipes(recipes, searchTerm = '') {
         return text.replace(regex, '<mark>$1</mark>');
     }
     
+    // Helper function to generate star rating display
+    function generateStarRating(rating) {
+        if (!rating) return '<div class="star-rating"><span class="no-rating">No rating</span></div>';
+        
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+            if (i <= rating) {
+                stars += '<i class="material-icons star filled">star</i>';
+            } else {
+                stars += '<i class="material-icons star">star_border</i>';
+            }
+        }
+        return `<div class="star-rating">${stars}</div>`;
+    }
+    
     const recipesHTML = recipes.map(recipe => `
         <div class="saved-recipe-item mdc-card mdc-elevation--z1" onclick="viewSavedRecipe(${recipe.id})">
             <div class="saved-recipe-header">
@@ -380,6 +450,7 @@ function displaySavedRecipes(recipes, searchTerm = '') {
                 <div><i class="material-icons">kitchen</i> ${highlightText(recipe.ingredients_used, searchTerm)}</div>
                 <div><i class="material-icons">schedule</i> ${new Date(recipe.timestamp).toLocaleDateString()}</div>
                 ${recipe.dietary_restrictions ? `<div><i class="material-icons">health_and_safety</i> ${highlightText(recipe.dietary_restrictions, searchTerm)}</div>` : ''}
+                ${generateStarRating(recipe.rating)}
             </div>
         </div>
     `).join('');
@@ -404,8 +475,16 @@ async function viewSavedRecipe(recipeId) {
                 serving_size: recipe.serving_size
             };
             
+            // Store the recipe ID for rating functionality
+            currentRecipeData.id = recipe.id;
+            currentRecipeData.rating = recipe.rating;
+            
             displayRecipe(currentRecipeData);
             showElement('recipeResult');
+            showElement('recipeRating');
+            
+            // Setup star rating for saved recipe
+            setupStarRating(recipe.rating);
             
             // Scroll to recipe result
             document.getElementById('recipeResult').scrollIntoView({ behavior: 'smooth' });
@@ -509,6 +588,81 @@ function addRippleEffect() {
         const ripple = mdc.ripple.MDCRipple.attachTo(button);
         ripple.unbounded = true;
     });
+}
+
+// Setup interactive star rating
+function setupStarRating(currentRating) {
+    const stars = document.querySelectorAll('.star-interactive');
+    const message = document.getElementById('ratingMessage');
+    
+    // Set current rating
+    updateStarDisplay(currentRating || 0);
+    
+    // Add click handlers
+    stars.forEach((star, index) => {
+        star.addEventListener('click', async () => {
+            const rating = index + 1;
+            if (currentRecipeData && currentRecipeData.id) {
+                await updateRecipeRating(currentRecipeData.id, rating);
+            }
+        });
+        
+        star.addEventListener('mouseenter', () => {
+            updateStarDisplay(index + 1, true);
+        });
+        
+        star.addEventListener('mouseleave', () => {
+            updateStarDisplay(currentRecipeData?.rating || 0);
+        });
+    });
+    
+    if (currentRating) {
+        message.textContent = `Current rating: ${currentRating} star${currentRating !== 1 ? 's' : ''}`;
+    } else {
+        message.textContent = 'Click stars to rate this recipe';
+    }
+}
+
+// Update star display
+function updateStarDisplay(rating, isHover = false) {
+    const stars = document.querySelectorAll('.star-interactive');
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.textContent = 'star';
+            star.classList.add(isHover ? 'hover' : 'filled');
+            star.classList.remove(isHover ? 'filled' : 'hover');
+        } else {
+            star.textContent = 'star_border';
+            star.classList.remove('filled', 'hover');
+        }
+    });
+}
+
+// Update recipe rating via API
+async function updateRecipeRating(recipeId, rating) {
+    try {
+        const response = await fetch(`/api/recipes/${recipeId}/rating`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ rating })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            currentRecipeData.rating = rating;
+            updateStarDisplay(rating);
+            document.getElementById('ratingMessage').textContent = `Rated ${rating} star${rating !== 1 ? 's' : ''}`;
+            showSuccess(`Recipe rated ${rating} star${rating !== 1 ? 's' : ''}!`);
+        } else {
+            showError(data.error || 'Failed to update rating');
+        }
+    } catch (error) {
+        showError('Failed to update rating');
+        console.error('Error updating rating:', error);
+    }
 }
 
 // Initialize on page load

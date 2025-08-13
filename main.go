@@ -71,6 +71,7 @@ func main() {
 		api.GET("/recipes", v.ValidatePagination(), h.GetRecipes)
 		api.GET("/recipes/:id", v.ValidateIDParam(), h.GetRecipe)
 		api.DELETE("/recipes/:id", v.ValidateIDParam(), h.DeleteRecipe)
+		api.PUT("/recipes/:id/rating", v.ValidateIDParam(), h.UpdateRecipeRating)
 	}
 
 	log.Printf("Server starting on port %s", cfg.Port)

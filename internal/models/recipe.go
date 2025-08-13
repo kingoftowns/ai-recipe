@@ -16,6 +16,7 @@ type Recipe struct {
 	DietaryRestrictions *string   `json:"dietary_restrictions" gorm:"size:100"`
 	CuisinePreference   *string   `json:"cuisine_preference" gorm:"size:100"`
 	ServingSize         int       `json:"serving_size" gorm:"default:4"`
+	Rating              *int      `json:"rating" gorm:"check:rating >= 1 AND rating <= 5"`
 	CreatedAt           time.Time `json:"timestamp"`
 	UpdatedAt           time.Time `json:"-"`
 }
