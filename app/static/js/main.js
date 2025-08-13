@@ -53,6 +53,20 @@ document.getElementById('ingredients').addEventListener('input', debounce(async 
     }
 }, 500));
 
+// Real-time recipe search
+document.addEventListener('DOMContentLoaded', () => {
+    // Add event listener after DOM is loaded
+    setTimeout(() => {
+        const searchField = document.getElementById('recipeSearch');
+        if (searchField) {
+            searchField.addEventListener('input', debounce(async () => {
+                const searchTerm = searchField.value.trim();
+                await searchSavedRecipes(searchTerm);
+            }, 300));
+        }
+    }, 100);
+});
+
 // Validate ingredients function
 async function validateIngredients(silent = false) {
     const ingredients = document.getElementById('ingredients').value.trim();
@@ -278,11 +292,17 @@ ${currentRecipeData.recipe}`;
 
 // Load saved recipes
 async function loadSavedRecipes() {
+    // Clear search field when loading all recipes
+    const searchField = document.getElementById('recipeSearch');
+    if (searchField) {
+        searchField.value = '';
+    }
+    
     const container = document.getElementById('savedRecipesList');
     container.innerHTML = '<div class="loading-message">Loading saved recipes...</div>';
     
     try {
-        const response = await fetch('/api/recipes?per_page=20');
+        const response = await fetch('/api/recipes?per_page=50');
         const data = await response.json();
         
         if (response.ok) {
@@ -296,19 +316,60 @@ async function loadSavedRecipes() {
     }
 }
 
+// Search saved recipes with real-time results
+async function searchSavedRecipes(searchTerm) {
+    const container = document.getElementById('savedRecipesList');
+    
+    if (!searchTerm) {
+        container.innerHTML = '<div class="loading-message">Start typing to search recipes, or click "Load All" to see all saved recipes</div>';
+        return;
+    }
+    
+    container.innerHTML = '<div class="loading-message">Searching recipes...</div>';
+    
+    try {
+        const response = await fetch(`/api/recipes?search=${encodeURIComponent(searchTerm)}&per_page=50`);
+        const data = await response.json();
+        
+        if (response.ok) {
+            if (data.recipes && data.recipes.length > 0) {
+                displaySavedRecipes(data.recipes, searchTerm);
+            } else {
+                container.innerHTML = `<div class="no-recipes-message">No recipes found for "${searchTerm}". Try different keywords!</div>`;
+            }
+        } else {
+            container.innerHTML = '<div class="error-message">Failed to search recipes</div>';
+        }
+    } catch (error) {
+        container.innerHTML = '<div class="error-message">Error searching recipes</div>';
+        console.error('Error searching saved recipes:', error);
+    }
+}
+
 // Display saved recipes
-function displaySavedRecipes(recipes) {
+function displaySavedRecipes(recipes, searchTerm = '') {
     const container = document.getElementById('savedRecipesList');
     
     if (!recipes || recipes.length === 0) {
-        container.innerHTML = '<div class="no-recipes-message">No saved recipes found. Save some recipes to see them here!</div>';
+        if (searchTerm) {
+            container.innerHTML = `<div class="no-recipes-message">No recipes found for "${searchTerm}". Try different keywords!</div>`;
+        } else {
+            container.innerHTML = '<div class="no-recipes-message">No saved recipes found. Save some recipes to see them here!</div>';
+        }
         return;
+    }
+    
+    // Helper function to highlight search terms
+    function highlightText(text, searchTerm) {
+        if (!searchTerm || !text) return text;
+        const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return text.replace(regex, '<mark>$1</mark>');
     }
     
     const recipesHTML = recipes.map(recipe => `
         <div class="saved-recipe-item mdc-card mdc-elevation--z1" onclick="viewSavedRecipe(${recipe.id})">
             <div class="saved-recipe-header">
-                <h4 class="mdc-typography--headline6">${recipe.title}</h4>
+                <h4 class="mdc-typography--headline6">${highlightText(recipe.title, searchTerm)}</h4>
                 <div class="saved-recipe-actions">
                     <button onclick="event.stopPropagation(); deleteSavedRecipe(${recipe.id})" class="mdc-icon-button material-icons" title="Delete recipe">
                         delete
@@ -316,9 +377,9 @@ function displaySavedRecipes(recipes) {
                 </div>
             </div>
             <div class="saved-recipe-meta">
-                <div><i class="material-icons">kitchen</i> ${recipe.ingredients_used}</div>
+                <div><i class="material-icons">kitchen</i> ${highlightText(recipe.ingredients_used, searchTerm)}</div>
                 <div><i class="material-icons">schedule</i> ${new Date(recipe.timestamp).toLocaleDateString()}</div>
-                ${recipe.dietary_restrictions ? `<div><i class="material-icons">health_and_safety</i> ${recipe.dietary_restrictions}</div>` : ''}
+                ${recipe.dietary_restrictions ? `<div><i class="material-icons">health_and_safety</i> ${highlightText(recipe.dietary_restrictions, searchTerm)}</div>` : ''}
             </div>
         </div>
     `).join('');

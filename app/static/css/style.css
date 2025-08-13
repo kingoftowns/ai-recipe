@@ -44,6 +44,21 @@
     --mdc-theme-inverse-primary: #D0BCFF;
 }
 
+/* Search functionality styles */
+.search-container {
+    padding: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--mdc-theme-outline-variant);
+}
+
+mark {
+    background-color: var(--mdc-theme-primary-container);
+    color: var(--mdc-theme-on-primary-container);
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
 /* Base styles */
 * {
     margin: 0;

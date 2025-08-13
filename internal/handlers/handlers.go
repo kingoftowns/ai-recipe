@@ -384,8 +384,8 @@ func (h *Handler) GetRecipes(c *gin.Context) {
 
 	if search != "" {
 		searchPattern := "%" + search + "%"
-		query = query.Where("title ILIKE ? OR ingredients_used ILIKE ? OR dietary_restrictions ILIKE ? OR cuisine_preference ILIKE ?",
-			searchPattern, searchPattern, searchPattern, searchPattern)
+		query = query.Where("title ILIKE ? OR recipe_content ILIKE ?",
+			searchPattern, searchPattern)
 	}
 
 	var total int64

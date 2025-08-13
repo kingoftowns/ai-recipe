@@ -179,12 +179,28 @@
                 <button onclick="loadSavedRecipes()" class="mdc-button mdc-button--outlined">
                     <span class="mdc-button__ripple"></span>
                     <i class="material-icons mdc-button__icon" aria-hidden="true">refresh</i>
-                    <span class="mdc-button__label">Refresh</span>
+                    <span class="mdc-button__label">Load All</span>
                 </button>
             </div>
         </div>
+        
+        <!-- Search Bar -->
+        <div class="search-container">
+            <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--with-leading-icon mdc-text-field--fullwidth" data-mdc-auto-init="MDCTextField">
+                <i class="material-icons mdc-text-field__icon mdc-text-field__icon--leading">search</i>
+                <input class="mdc-text-field__input" type="text" id="recipeSearch" placeholder="Search recipes by name or ingredients...">
+                <div class="mdc-notched-outline">
+                    <div class="mdc-notched-outline__leading"></div>
+                    <div class="mdc-notched-outline__notch">
+                        <label for="recipeSearch" class="mdc-floating-label">Search recipes</label>
+                    </div>
+                    <div class="mdc-notched-outline__trailing"></div>
+                </div>
+            </div>
+        </div>
+        
         <div id="savedRecipesList" class="saved-recipes-list">
-            <div class="loading-message">Click "Refresh" to load your saved recipes</div>
+            <div class="loading-message">Start typing to search recipes, or click "Load All" to see all saved recipes</div>
         </div>
     </div>
 
