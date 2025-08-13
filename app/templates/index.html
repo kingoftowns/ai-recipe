@@ -2,121 +2,192 @@
 
 {% block content %}
 <div class="container">
-    <div class="hero-section">
-        <h2>Transform Your Ingredients into Delicious Recipes</h2>
-        <p>Enter the ingredients you have, and let Big Papi create the perfect recipe for you!</p>
+    <!-- Hero Section with Material Design Card -->
+    <div class="mdc-card hero-card mdc-elevation--z4">
+        <div class="mdc-card__primary">
+            <h2 class="mdc-typography--headline4">Transform Your Ingredients into Delicious Recipes</h2>
+            <p class="mdc-typography--body1">Enter the ingredients you have, and let Big Papi create the perfect recipe for you!</p>
+        </div>
     </div>
 
-    <div class="recipe-form-container">
+    <!-- Recipe Form with Material Design Components -->
+    <div class="mdc-card form-card mdc-elevation--z2">
         <form id="recipeForm" class="recipe-form">
-            <div class="form-group">
-                <label for="ingredients">Available Ingredients *</label>
+            <!-- Ingredients Text Field -->
+            <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--textarea mdc-text-field--fullwidth" data-mdc-auto-init="MDCTextField">
                 <textarea 
                     id="ingredients" 
                     name="ingredients" 
-                    placeholder="Enter ingredients separated by commas (e.g., chicken, rice, tomatoes, onions)"
+                    class="mdc-text-field__input"
                     rows="4"
+                    aria-labelledby="ingredients-label"
                     required
                 ></textarea>
-                <small class="form-hint">Minimum 1 ingredient, maximum 20 ingredients</small>
-                <div id="ingredientsFeedback" class="feedback"></div>
+                <div class="mdc-notched-outline">
+                    <div class="mdc-notched-outline__leading"></div>
+                    <div class="mdc-notched-outline__notch">
+                        <label class="mdc-floating-label" id="ingredients-label" for="ingredients">Available Ingredients *</label>
+                    </div>
+                    <div class="mdc-notched-outline__trailing"></div>
+                </div>
             </div>
+            <div class="mdc-text-field-helper-line">
+                <div class="mdc-text-field-helper-text mdc-text-field-helper-text--persistent">
+                    Enter ingredients separated by commas (min 1, max 20)
+                </div>
+            </div>
+            <div id="ingredientsFeedback" class="feedback"></div>
 
             <div class="form-row">
-                <div class="form-group">
-                    <label for="dietary_restrictions">Dietary Restrictions</label>
-                    <select id="dietary_restrictions" name="dietary_restrictions">
-                        <option value="">None</option>
-                        <option value="vegetarian">Vegetarian</option>
-                        <option value="vegan">Vegan</option>
-                        <option value="gluten-free">Gluten-Free</option>
-                        <option value="dairy-free">Dairy-Free</option>
-                        <option value="keto">Keto</option>
-                        <option value="paleo">Paleo</option>
-                        <option value="low-carb">Low-Carb</option>
-                        <option value="nut-free">Nut-Free</option>
-                    </select>
+                <!-- Dietary Restrictions Select -->
+                <div class="select-wrapper">
+                    <label class="select-label" for="dietary_restrictions">Dietary Restrictions</label>
+                    <div class="select-container">
+                        <select id="dietary_restrictions" name="dietary_restrictions" class="material-select">
+                            <option value="" selected>None</option>
+                            <option value="vegetarian">Vegetarian</option>
+                            <option value="vegan">Vegan</option>
+                            <option value="gluten-free">Gluten-Free</option>
+                            <option value="dairy-free">Dairy-Free</option>
+                            <option value="keto">Keto</option>
+                            <option value="paleo">Paleo</option>
+                            <option value="low-carb">Low-Carb</option>
+                            <option value="nut-free">Nut-Free</option>
+                        </select>
+                        <i class="material-icons select-icon">arrow_drop_down</i>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="cuisine_preference">Cuisine Preference</label>
-                    <select id="cuisine_preference" name="cuisine_preference">
-                        <option value="">Any Cuisine</option>
-                        <option value="italian">Italian</option>
-                        <option value="mexican">Mexican</option>
-                        <option value="chinese">Chinese</option>
-                        <option value="indian">Indian</option>
-                        <option value="japanese">Japanese</option>
-                        <option value="thai">Thai</option>
-                        <option value="mediterranean">Mediterranean</option>
-                        <option value="american">American</option>
-                        <option value="french">French</option>
-                        <option value="korean">Korean</option>
-                    </select>
+                <!-- Cuisine Preference Select -->
+                <div class="select-wrapper">
+                    <label class="select-label" for="cuisine_preference">Cuisine Preference</label>
+                    <div class="select-container">
+                        <select id="cuisine_preference" name="cuisine_preference" class="material-select">
+                            <option value="" selected>Any Cuisine</option>
+                            <option value="italian">Italian</option>
+                            <option value="mexican">Mexican</option>
+                            <option value="chinese">Chinese</option>
+                            <option value="indian">Indian</option>
+                            <option value="japanese">Japanese</option>
+                            <option value="thai">Thai</option>
+                            <option value="mediterranean">Mediterranean</option>
+                            <option value="american">American</option>
+                            <option value="french">French</option>
+                            <option value="korean">Korean</option>
+                        </select>
+                        <i class="material-icons select-icon">arrow_drop_down</i>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="serving_size">Serving Size</label>
+                <!-- Serving Size -->
+                <div class="mdc-text-field mdc-text-field--outlined" data-mdc-auto-init="MDCTextField">
                     <input 
                         type="number" 
                         id="serving_size" 
                         name="serving_size" 
+                        class="mdc-text-field__input"
                         min="1" 
                         max="12" 
                         value="4"
                     >
-                    <small class="form-hint">Number of servings</small>
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__notch">
+                            <label class="mdc-floating-label" for="serving_size">Serving Size</label>
+                        </div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
                 </div>
             </div>
 
+            <!-- Action Buttons -->
             <div class="form-actions">
-                <button type="button" id="validateBtn" class="btn btn-secondary">
-                    Validate Ingredients
+                <button type="button" id="validateBtn" class="mdc-button mdc-button--outlined">
+                    <span class="mdc-button__ripple"></span>
+                    <i class="material-icons mdc-button__icon" aria-hidden="true">check_circle</i>
+                    <span class="mdc-button__label">Validate Ingredients</span>
                 </button>
-                <button type="submit" id="generateBtn" class="btn btn-primary">
-                    Generate Recipe
+                <button type="submit" id="generateBtn" class="mdc-button mdc-button--raised">
+                    <span class="mdc-button__ripple"></span>
+                    <i class="material-icons mdc-button__icon" aria-hidden="true">restaurant</i>
+                    <span class="mdc-button__label">Generate Recipe</span>
                 </button>
             </div>
         </form>
     </div>
 
-    <div id="loadingIndicator" class="loading-container" style="display: none;">
-        <div class="loading-spinner"></div>
-        <p>Creating your perfect recipe...</p>
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="mdc-card loading-card mdc-elevation--z2" style="display: none;">
+        <div class="loading-content">
+            <div class="mdc-circular-progress mdc-circular-progress--indeterminate" data-mdc-auto-init="MDCCircularProgress">
+                <div class="mdc-circular-progress__determinate-container">
+                    <svg class="mdc-circular-progress__determinate-circle-graphic" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="mdc-circular-progress__determinate-track" cx="24" cy="24" r="18" stroke-width="4"/>
+                        <circle class="mdc-circular-progress__determinate-circle" cx="24" cy="24" r="18" stroke-dasharray="113.097" stroke-dashoffset="113.097" stroke-width="4"/>
+                    </svg>
+                </div>
+                <div class="mdc-circular-progress__indeterminate-container">
+                    <div class="mdc-circular-progress__spinner-layer">
+                        <div class="mdc-circular-progress__circle-clipper mdc-circular-progress__circle-left">
+                            <svg class="mdc-circular-progress__indeterminate-circle-graphic" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="24" cy="24" r="18" stroke-dasharray="113.097" stroke-dashoffset="56.549" stroke-width="4"/>
+                            </svg>
+                        </div>
+                        <div class="mdc-circular-progress__gap-patch">
+                            <svg class="mdc-circular-progress__indeterminate-circle-graphic" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="24" cy="24" r="18" stroke-dasharray="113.097" stroke-dashoffset="56.549" stroke-width="3.2"/>
+                            </svg>
+                        </div>
+                        <div class="mdc-circular-progress__circle-clipper mdc-circular-progress__circle-right">
+                            <svg class="mdc-circular-progress__indeterminate-circle-graphic" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="24" cy="24" r="18" stroke-dasharray="113.097" stroke-dashoffset="56.549" stroke-width="4"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="mdc-typography--body1">Creating your perfect recipe...</p>
+        </div>
     </div>
 
-    <div id="recipeResult" class="recipe-result" style="display: none;">
+    <!-- Recipe Result Card -->
+    <div id="recipeResult" class="mdc-card recipe-card mdc-elevation--z2" style="display: none;">
         <div class="recipe-header">
-            <h3>Your Generated Recipe</h3>
+            <h3 class="mdc-typography--headline5">Your Generated Recipe</h3>
             <div class="recipe-actions">
-                <button onclick="saveRecipe()" class="btn btn-small btn-secondary">
-                    💾 Save
+                <button onclick="saveRecipe()" class="mdc-icon-button material-icons">
+                    save
                 </button>
-                <button onclick="exportRecipe('txt')" class="btn btn-small btn-secondary">
-                    📄 Export as Text
+                <button onclick="exportRecipe('txt')" class="mdc-icon-button material-icons">
+                    description
                 </button>
-                <button onclick="exportRecipe('json')" class="btn btn-small btn-secondary">
-                    📋 Export as JSON
+                <button onclick="exportRecipe('json')" class="mdc-icon-button material-icons">
+                    code
                 </button>
-                <button onclick="copyRecipe()" class="btn btn-small btn-secondary">
-                    📋 Copy to Clipboard
+                <button onclick="copyRecipe()" class="mdc-icon-button material-icons">
+                    content_copy
                 </button>
             </div>
         </div>
-        <div id="recipeContent" class="recipe-content"></div>
+        <div id="recipeContent" class="recipe-content mdc-typography--body1"></div>
         <div id="recipeMeta" class="recipe-meta"></div>
     </div>
 
-    <div id="errorContainer" class="error-container" style="display: none;">
-        <div class="error-message">
-            <span class="error-icon">⚠️</span>
-            <p id="errorMessage"></p>
+    <!-- Error Snackbar -->
+    <div id="errorContainer" class="mdc-snackbar" data-mdc-auto-init="MDCSnackbar">
+        <div class="mdc-snackbar__surface">
+            <div class="mdc-snackbar__label" id="errorMessage"></div>
+            <div class="mdc-snackbar__actions">
+                <button type="button" class="mdc-icon-button mdc-snackbar__dismiss material-icons">close</button>
+            </div>
         </div>
     </div>
 
-    <div id="successMessage" class="success-message" style="display: none;">
-        <span class="success-icon">✅</span>
-        <p id="successText"></p>
+    <!-- Success Snackbar -->
+    <div id="successMessage" class="mdc-snackbar" data-mdc-auto-init="MDCSnackbar">
+        <div class="mdc-snackbar__surface">
+            <div class="mdc-snackbar__label" id="successText"></div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -124,5 +195,10 @@
 {% block scripts %}
 <script>
     let currentRecipeData = null;
+    
+    // Re-initialize MDC components after DOM update
+    document.addEventListener('DOMContentLoaded', function() {
+        mdc.autoInit();
+    });
 </script>
 {% endblock %}

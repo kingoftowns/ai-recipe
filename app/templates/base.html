@@ -4,23 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Don Miguel's Recipes{% endblock %}</title>
+    <!-- Material Design Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Google Fonts - Roboto for Material Design -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Material Components Web CSS -->
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+    <!-- Custom styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <h1>🍳 Don Miguel's Recipes</h1>
-            </div>
-            <div class="nav-links">
-                <a href="/" class="nav-link">Home</a>
-                <a href="#" class="nav-link" onclick="showAbout()">About</a>
-            </div>
+    <header class="mdc-top-app-bar mdc-top-app-bar--fixed" data-mdc-auto-init="MDCTopAppBar">
+        <div class="mdc-top-app-bar__row">
+            <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+                <span class="mdc-top-app-bar__title">
+                    <i class="material-icons" style="vertical-align: middle; margin-right: 8px;">restaurant_menu</i>
+                    Don Miguel's Recipes
+                </span>
+            </section>
+            <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end" role="toolbar">
+                <button class="mdc-icon-button material-icons mdc-top-app-bar__action-item" aria-label="Home" onclick="window.location.href='/'">
+                    home
+                </button>
+                <button class="mdc-icon-button material-icons mdc-top-app-bar__action-item" aria-label="About" onclick="showAbout()">
+                    info
+                </button>
+            </section>
         </div>
-    </nav>
+    </header>
 
-    <main class="main-content">
+    <main class="main-content mdc-top-app-bar--fixed-adjust">
         {% block content %}{% endblock %}
     </main>
 
@@ -30,23 +43,51 @@
         </div>
     </footer>
 
-    <div id="aboutModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeAbout()">&times;</span>
-            <h2>About Don Miguel's Recipes</h2>
-            <p>Don Miguel's Recipes uses Claude AI to generate creative and delicious recipes based on the ingredients you have available, combining traditional flavors with modern innovation.</p>
-            <p>Simply enter your ingredients, specify any dietary restrictions or preferences, and let AI create a custom recipe just for you!</p>
-            <h3>Features:</h3>
-            <ul>
-                <li>AI-powered recipe generation</li>
-                <li>Dietary restriction support</li>
-                <li>Cuisine preference selection</li>
-                <li>Adjustable serving sizes</li>
-                <li>Save and export recipes</li>
-            </ul>
+    <div class="mdc-dialog" id="aboutDialog">
+        <div class="mdc-dialog__container">
+            <div class="mdc-dialog__surface" role="alertdialog" aria-modal="true">
+                <h2 class="mdc-dialog__title">About Don Miguel's Recipes</h2>
+                <div class="mdc-dialog__content">
+                    <p>Don Miguel's Recipes uses Claude AI to generate creative and delicious recipes based on the ingredients you have available, combining traditional flavors with modern innovation.</p>
+                    <p>Simply enter your ingredients, specify any dietary restrictions or preferences, and let AI create a custom recipe just for you!</p>
+                    <h3>Features:</h3>
+                    <ul class="mdc-list">
+                        <li class="mdc-list-item"><i class="material-icons mdc-list-item__graphic">smart_toy</i>AI-powered recipe generation</li>
+                        <li class="mdc-list-item"><i class="material-icons mdc-list-item__graphic">health_and_safety</i>Dietary restriction support</li>
+                        <li class="mdc-list-item"><i class="material-icons mdc-list-item__graphic">public</i>Cuisine preference selection</li>
+                        <li class="mdc-list-item"><i class="material-icons mdc-list-item__graphic">group</i>Adjustable serving sizes</li>
+                        <li class="mdc-list-item"><i class="material-icons mdc-list-item__graphic">save</i>Save and export recipes</li>
+                    </ul>
+                </div>
+                <div class="mdc-dialog__actions">
+                    <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="close">
+                        <div class="mdc-button__ripple"></div>
+                        <span class="mdc-button__label">Close</span>
+                    </button>
+                </div>
+            </div>
         </div>
+        <div class="mdc-dialog__scrim"></div>
     </div>
 
+    <!-- Material Components Web JS -->
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <script>
+        // Initialize Material Components
+        mdc.autoInit();
+        
+        // Initialize dialog
+        const dialog = new mdc.dialog.MDCDialog(document.querySelector('.mdc-dialog'));
+        
+        // Update showAbout and closeAbout functions
+        window.showAbout = function() {
+            dialog.open();
+        };
+        
+        window.closeAbout = function() {
+            dialog.close();
+        };
+    </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>

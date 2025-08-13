@@ -1,5 +1,36 @@
 // Global variables
 let currentRecipeData = null;
+let mdcComponents = {};
+
+// Initialize Material Design Components
+function initializeMDCComponents() {
+    // Initialize text fields
+    document.querySelectorAll('.mdc-text-field').forEach(textField => {
+        const mdcTextField = new mdc.textField.MDCTextField(textField);
+        mdcComponents[textField.id] = mdcTextField;
+    });
+    
+    // Initialize custom select elements (no special initialization needed for native selects)
+    // Store references for form data collection
+    mdcComponents['dietary_restrictions'] = document.getElementById('dietary_restrictions');
+    mdcComponents['cuisine_preference'] = document.getElementById('cuisine_preference');
+    
+    // Initialize snackbars
+    const errorSnackbar = document.querySelector('#errorContainer');
+    const successSnackbar = document.querySelector('#successMessage');
+    if (errorSnackbar) {
+        mdcComponents.errorSnackbar = new mdc.snackbar.MDCSnackbar(errorSnackbar);
+    }
+    if (successSnackbar) {
+        mdcComponents.successSnackbar = new mdc.snackbar.MDCSnackbar(successSnackbar);
+    }
+    
+    // Initialize circular progress
+    const progress = document.querySelector('.mdc-circular-progress');
+    if (progress) {
+        mdcComponents.progress = new mdc.circularProgress.MDCCircularProgress(progress);
+    }
+}
 
 // Form submission
 document.getElementById('recipeForm').addEventListener('submit', async (e) => {
@@ -72,7 +103,7 @@ async function generateRecipe() {
         return;
     }
     
-    // Get form data
+    // Get form data - using native select elements
     const formData = {
         ingredients: document.getElementById('ingredients').value.trim(),
         dietary_restrictions: document.getElementById('dietary_restrictions').value,
@@ -82,9 +113,10 @@ async function generateRecipe() {
     
     // Show loading, hide others
     showElement('loadingIndicator');
+    if (mdcComponents.progress) {
+        mdcComponents.progress.open();
+    }
     hideElement('recipeResult');
-    hideElement('errorContainer');
-    hideElement('successMessage');
     
     // Disable form
     setFormEnabled(false);
@@ -104,6 +136,9 @@ async function generateRecipe() {
             currentRecipeData = data;
             displayRecipe(data);
             showElement('recipeResult');
+            // Animate the recipe card
+            const recipeCard = document.getElementById('recipeResult');
+            recipeCard.style.animation = 'fadeIn 0.5s ease-out';
         } else {
             showError(data.error || 'Failed to generate recipe');
         }
@@ -111,6 +146,9 @@ async function generateRecipe() {
         showError('Network error. Please check your connection and try again.');
     } finally {
         hideElement('loadingIndicator');
+        if (mdcComponents.progress) {
+            mdcComponents.progress.close();
+        }
         setFormEnabled(true);
     }
 }
@@ -123,12 +161,12 @@ function displayRecipe(data) {
     // Format recipe content with proper line breaks
     content.textContent = data.recipe;
     
-    // Display metadata
+    // Display metadata with Material Icons
     meta.innerHTML = `
-        <div><strong>Ingredients Used:</strong> ${data.ingredients_used}</div>
-        <div><strong>Dietary:</strong> ${data.dietary_restrictions || 'None'}</div>
-        <div><strong>Cuisine:</strong> ${data.cuisine_preference || 'Any'}</div>
-        <div><strong>Servings:</strong> ${data.serving_size}</div>
+        <div><i class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">kitchen</i> <strong>Ingredients:</strong> ${data.ingredients_used}</div>
+        <div><i class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">health_and_safety</i> <strong>Dietary:</strong> ${data.dietary_restrictions || 'None'}</div>
+        <div><i class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">public</i> <strong>Cuisine:</strong> ${data.cuisine_preference || 'Any'}</div>
+        <div><i class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">group</i> <strong>Servings:</strong> ${data.serving_size}</div>
     `;
 }
 
@@ -232,23 +270,6 @@ ${currentRecipeData.recipe}`;
     }
 }
 
-// Modal functions
-function showAbout() {
-    document.getElementById('aboutModal').style.display = 'block';
-}
-
-function closeAbout() {
-    document.getElementById('aboutModal').style.display = 'none';
-}
-
-// Click outside modal to close
-window.onclick = function(event) {
-    const modal = document.getElementById('aboutModal');
-    if (event.target === modal) {
-        modal.style.display = 'none';
-    }
-}
-
 // Utility functions
 function showElement(id) {
     const element = document.getElementById(id);
@@ -273,19 +294,24 @@ function setFormEnabled(enabled) {
 }
 
 function showError(message) {
-    const errorContainer = document.getElementById('errorContainer');
-    const errorMessage = document.getElementById('errorMessage');
-    errorMessage.textContent = message;
-    showElement('errorContainer');
-    setTimeout(() => hideElement('errorContainer'), 5000);
+    if (mdcComponents.errorSnackbar) {
+        mdcComponents.errorSnackbar.labelText = message;
+        mdcComponents.errorSnackbar.open();
+    } else {
+        // Fallback if snackbar not initialized
+        console.error(message);
+    }
 }
 
 function showSuccess(message) {
-    const successMessage = document.getElementById('successMessage');
-    const successText = document.getElementById('successText');
-    successText.textContent = message;
-    showElement('successMessage');
-    setTimeout(() => hideElement('successMessage'), 3000);
+    if (mdcComponents.successSnackbar) {
+        mdcComponents.successSnackbar.labelText = message;
+        mdcComponents.successSnackbar.timeoutMs = 3000;
+        mdcComponents.successSnackbar.open();
+    } else {
+        // Fallback if snackbar not initialized
+        console.log(message);
+    }
 }
 
 // Debounce function for real-time validation
@@ -301,10 +327,33 @@ function debounce(func, wait) {
     };
 }
 
+// Add ripple effect to buttons
+function addRippleEffect() {
+    document.querySelectorAll('.mdc-button').forEach(button => {
+        mdc.ripple.MDCRipple.attachTo(button);
+    });
+    
+    document.querySelectorAll('.mdc-icon-button').forEach(button => {
+        const ripple = mdc.ripple.MDCRipple.attachTo(button);
+        ripple.unbounded = true;
+    });
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-    // Set focus on ingredients field
-    document.getElementById('ingredients').focus();
+    // Initialize MDC components
+    initializeMDCComponents();
+    
+    // Add ripple effects
+    addRippleEffect();
+    
+    // Set focus on ingredients field after a short delay for MDC to initialize
+    setTimeout(() => {
+        const ingredientsField = document.getElementById('ingredients');
+        if (ingredientsField) {
+            ingredientsField.focus();
+        }
+    }, 100);
     
     // Add smooth scrolling
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -317,6 +366,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     block: 'start'
                 });
             }
+        });
+    });
+    
+    // Add hover effects to cards
+    document.querySelectorAll('.mdc-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
         });
     });
 });
