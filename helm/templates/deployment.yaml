@@ -35,10 +35,11 @@ spec:
                 secretKeyRef:
                   name: {{ include "recipe-ai.fullname" . }}-secret
                   key: secret-key
-            {{- if .Values.postgres.enabled }}
             - name: DATABASE_URL
-              value: "postgresql://{{ .Values.postgres.username }}:{{ .Values.postgres.password }}@{{ include "recipe-ai.fullname" . }}-postgres:5432/{{ .Values.postgres.database }}"
-            {{- end }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "recipe-ai.fullname" . }}-secret
+                  key: database-url
             {{- range $key, $value := .Values.deployment.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}

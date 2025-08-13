@@ -32,15 +32,13 @@ spec:
       - name: migration
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command: ["python3", "migrate.py"]
+        command: ["./migrate", "-direction=up"]
         env:
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
               name: {{ include "recipe-ai.fullname" . }}-secret
               key: database-url
-        - name: FLASK_APP
-          value: "app.py"
         resources:
           limits:
             cpu: 500m

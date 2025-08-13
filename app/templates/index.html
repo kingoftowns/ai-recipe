@@ -1,6 +1,4 @@
-{% extends "base.html" %}
-
-{% block content %}
+{{ define "content" }}
 <div class="container">
     <!-- Hero Section with Material Design Card -->
     <div class="mdc-card hero-card mdc-elevation--z4">
@@ -207,13 +205,15 @@
         </div>
     </div>
 </div>
-{% endblock %}
+{{ end }}
 
-{% block scripts %}
+{{ define "scripts" }}
 <script>
     // Re-initialize MDC components after DOM update
     document.addEventListener('DOMContentLoaded', function() {
         mdc.autoInit();
     });
 </script>
-{% endblock %}
+{{ end }}
+
+{{ template "base" . }}

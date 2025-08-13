@@ -3,51 +3,36 @@ version: '3.8'
 services:
   app:
     build:
-      context: ..
-      dockerfile: .devcontainer/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     volumes:
-      - ..:/workspace:cached
-      - /workspace/venv  # Prevent venv from being overwritten
-    working_dir: /workspace
+      - ../:/workspace:cached
     command: sleep infinity
     environment:
-      - FLASK_APP=app.py
-      - FLASK_ENV=development
-      - FLASK_DEBUG=1
-      - DATABASE_URL=postgresql://recipe_user:recipe_dev_password@postgres:5432/recipe_db
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-your-api-key-here}
-      - SECRET_KEY=${SECRET_KEY:-dev-secret-key}
+      - DATABASE_URL=postgresql://recipe_user:recipe_dev_password@postgres:5432/recipe_db?sslmode=disable
     ports:
       - "8000:8000"
+      - "5432:5432"
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     networks:
-      - recipe-network
+      - devcontainer_network
 
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
+    restart: unless-stopped
     environment:
-      - POSTGRES_DB=recipe_db
-      - POSTGRES_USER=recipe_user
-      - POSTGRES_PASSWORD=recipe_dev_password
-      - PGDATA=/var/lib/postgresql/data/pgdata
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: recipe_db
+      POSTGRES_USER: recipe_user
+      POSTGRES_PASSWORD: recipe_dev_password
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U recipe_user -d recipe_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - postgres-data:/var/lib/postgresql/data
     networks:
-      - recipe-network
-
-volumes:
-  postgres_data:
+      - devcontainer_network
 
 networks:
-  recipe-network:
+  devcontainer_network:
     driver: bridge
+
+volumes:
+  postgres-data:

@@ -1,67 +1,49 @@
 {
-  "name": "Don Miguel's Recipes",
+  "name": "Don Miguel's Recipes - Go",
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
+  "workspaceFolder": "/workspace",
   "features": {
-    "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.11"
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "1.24"
     },
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "customizations": {
     "vscode": {
-      "extensions": [
-        "ms-python.python",
-        "ms-python.vscode-pylance",
-        "ms-python.debugpy",
-        "ms-python.black-formatter",
-        "ms-python.isort",
-        "ms-python.flake8",
-        "ms-toolsai.jupyter",
-        "esbenp.prettier-vscode",
-        "dbaeumer.vscode-eslint",
-        "formulahendry.auto-rename-tag",
-        "christian-kohler.path-intellisense",
-        "streetsidesoftware.code-spell-checker"
-      ],
       "settings": {
-        "python.defaultInterpreterPath": "/usr/local/bin/python",
-        "python.linting.enabled": true,
-        "python.linting.pylintEnabled": true,
-        "python.formatting.provider": "black",
-        "python.formatting.blackPath": "/usr/local/bin/black",
-        "python.terminal.activateEnvironment": true,
-        "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": {
-          "source.organizeImports": true
-        },
-        "terminal.integrated.defaultProfile.linux": "bash"
-      }
+        "go.toolsManagement.checkForUpdates": "local",
+        "go.useLanguageServer": true,
+        "go.gopath": "/go",
+        "go.lintTool": "golangci-lint",
+        "go.lintFlags": [
+          "--fast"
+        ],
+        "[go]": {
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": {
+            "source.organizeImports": true
+          }
+        }
+      },
+      "extensions": [
+        "golang.Go",
+        "ms-azuretools.vscode-docker",
+        "eamodio.gitlens",
+        "EditorConfig.EditorConfig",
+        "streetsidesoftware.code-spell-checker",
+        "humao.rest-client"
+      ]
     }
   },
-  "postCreateCommand": "pip install -r requirements.txt && echo 'Dependencies installed!' && sleep 5 && FLASK_APP=app.py flask db upgrade && echo 'Database migrations completed!' && echo 'Environment ready!'",
-  "postStartCommand": "echo 'Welcome to Don Miguel\'s Recipes! Run \"flask run\" to start the application.'",
-  "forwardPorts": [8000, 5432],
-  "portsAttributes": {
-    "8000": {
-      "label": "Flask App",
-      "onAutoForward": "notify"
-    },
-    "5432": {
-      "label": "PostgreSQL",
-      "onAutoForward": "silent"
-    }
-  },
-  "remoteUser": "vscode",
-  "mounts": [
-    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+  // Use 'forwardPorts' to make a list of ports inside the container available locally
+  "forwardPorts": [
+    8080,
+    5432
   ],
-  "workspaceFolder": "/workspace",
-  "env": {
-    "FLASK_APP": "app.py",
-    "FLASK_ENV": "development",
-    "FLASK_DEBUG": "1",
-    "DATABASE_URL": "postgresql://recipe_user:recipe_dev_password@postgres:5432/recipe_db"
-  }
+  // Use 'postCreateCommand' to run commands after the container is created
+  "postCreateCommand": "git config --global --add safe.directory /workspace && go mod download && go install github.com/air-verse/air@latest && go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest",
+  // Comment out to connect as root instead
+  "remoteUser": "vscode"
 }

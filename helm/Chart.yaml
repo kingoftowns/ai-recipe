@@ -1,6 +1,6 @@
 apiVersion: v2
 name: recipe-ai
-description: A Helm chart for Recipe AI application
+description: A Helm chart for Recipe AI Go application
 type: application
 version: 0.1.0
 appVersion: "1.0.0"

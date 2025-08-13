@@ -1,21 +1,30 @@
-FROM python:3.11-slim
+FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+RUN apk add --no-cache git
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+COPY go.mod go.sum ./
 
-# Copy the application code
+RUN go mod download
+
 COPY . .
 
-# Create directory for saved recipes
-RUN mkdir -p saved_recipes
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o migrate ./cmd/migrate
 
-# Expose port 8000
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /root/
+
+COPY --from=builder /app/main .
+COPY --from=builder /app/migrate .
+
+COPY --from=builder /app/app ./app
+COPY --from=builder /app/migrations ./migrations
+
 EXPOSE 8000
 
-# Use gunicorn for production
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "app:app"]
+CMD ["./main"]

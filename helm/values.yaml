@@ -1,6 +1,3 @@
-# Default values for recipe-ai
-# This is a YAML-formatted file.
-
 namespace: recipe-ai
 
 image:
@@ -12,7 +9,7 @@ deployment:
   replicaCount: 1
   containerPort: 8000
   env:
-    FLASK_ENV: production
+    GIN_MODE: release
     CLAUDE_MODEL: "claude-sonnet-4-20250514"
   resources:
     limits:
@@ -62,12 +59,11 @@ secrets:
   anthropicApiKey: ""
   secretKey: ""
 
-# PostgreSQL Database configuration
 postgres:
   enabled: true
   database: "recipe_db"
   username: "recipe_user"
-  password: "recipe_password_change_me"  # Change this in production!
+  password: "recipe_password_change_me"
   
   resources:
     limits:
@@ -90,7 +86,3 @@ vaultSecretsOperator:
   path: "recipe-ai/secrets"
   refreshAfter: "30s"
   vaultAuthRef: "default"
-
-# Override chart name if needed
-nameOverride: ""
-fullnameOverride: ""
