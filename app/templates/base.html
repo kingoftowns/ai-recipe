@@ -1,6 +1,7 @@
 {{ define "base" }}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,6 +15,7 @@
     <!-- Custom styles -->
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
+
 <body>
     <header class="mdc-top-app-bar mdc-top-app-bar--fixed" data-mdc-auto-init="MDCTopAppBar">
         <div class="mdc-top-app-bar__row">
@@ -24,10 +26,12 @@
                 </span>
             </section>
             <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end" role="toolbar">
-                <button class="mdc-icon-button material-icons mdc-top-app-bar__action-item" aria-label="Home" onclick="window.location.href='/'">
+                <button class="mdc-icon-button material-icons mdc-top-app-bar__action-item" aria-label="Home"
+                    onclick="window.location.href='/'">
                     home
                 </button>
-                <button class="mdc-icon-button material-icons mdc-top-app-bar__action-item" aria-label="About" onclick="showAbout()">
+                <button class="mdc-icon-button material-icons mdc-top-app-bar__action-item" aria-label="About"
+                    onclick="showAbout()">
                     info
                 </button>
             </section>
@@ -49,15 +53,24 @@
             <div class="mdc-dialog__surface" role="alertdialog" aria-modal="true">
                 <h2 class="mdc-dialog__title">About Don Miguel's Recipes</h2>
                 <div class="mdc-dialog__content">
-                    <p>Don Miguel's Recipes uses Claude AI to generate creative and delicious recipes based on the ingredients you have available, combining traditional flavors with modern innovation.</p>
-                    <p>Simply enter your ingredients, specify any dietary restrictions or preferences, and let AI create a custom recipe just for you!</p>
+                    <p>Don Miguel's Recipes uses Claude AI to generate creative and delicious recipes based on the
+                        ingredients you have available, combining traditional flavors with modern innovation.</p>
+                    <p>Simply enter your ingredients, specify any dietary restrictions or preferences, and let AI create
+                        a custom recipe just for you!</p>
                     <h3>Features:</h3>
                     <ul class="mdc-list">
-                        <li class="mdc-list-item"><i class="material-icons mdc-list-item__graphic">smart_toy</i>AI-powered recipe generation</li>
-                        <li class="mdc-list-item"><i class="material-icons mdc-list-item__graphic">health_and_safety</i>Dietary restriction support</li>
-                        <li class="mdc-list-item"><i class="material-icons mdc-list-item__graphic">public</i>Cuisine preference selection</li>
-                        <li class="mdc-list-item"><i class="material-icons mdc-list-item__graphic">group</i>Adjustable serving sizes</li>
-                        <li class="mdc-list-item"><i class="material-icons mdc-list-item__graphic">save</i>Save and export recipes</li>
+                        <li class="mdc-list-item"><i
+                                class="material-icons mdc-list-item__graphic">smart_toy</i>AI-powered recipe generation
+                        </li>
+                        <li class="mdc-list-item"><i
+                                class="material-icons mdc-list-item__graphic">health_and_safety</i>Dietary restriction
+                            support</li>
+                        <li class="mdc-list-item"><i class="material-icons mdc-list-item__graphic">public</i>Cuisine
+                            preference selection</li>
+                        <li class="mdc-list-item"><i class="material-icons mdc-list-item__graphic">group</i>Adjustable
+                            serving sizes</li>
+                        <li class="mdc-list-item"><i class="material-icons mdc-list-item__graphic">save</i>Save and
+                            export recipes</li>
                     </ul>
                 </div>
                 <div class="mdc-dialog__actions">
@@ -76,22 +89,23 @@
     <script>
         // Initialize Material Components
         mdc.autoInit();
-        
+
         // Initialize dialog
         const dialog = new mdc.dialog.MDCDialog(document.querySelector('.mdc-dialog'));
-        
+
         // Update showAbout and closeAbout functions
-        window.showAbout = function() {
+        window.showAbout = function () {
             dialog.open();
         };
-        
-        window.closeAbout = function() {
+
+        window.closeAbout = function () {
             dialog.close();
         };
     </script>
     <script src="/static/js/main.js"></script>
     {{template "scripts" .}}
 </body>
+
 </html>
 {{ end }}
 

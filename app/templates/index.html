@@ -4,7 +4,8 @@
     <div class="mdc-card hero-card mdc-elevation--z4">
         <div class="mdc-card__primary">
             <h2 class="mdc-typography--headline4">Transform Your Ingredients into Delicious Recipes</h2>
-            <p class="mdc-typography--body1">Enter the ingredients you have, and let Big Papi create the perfect recipe for you!</p>
+            <p class="mdc-typography--body1">Enter the ingredients you have, and let Big Papi create the perfect recipe
+                for you!</p>
         </div>
     </div>
 
@@ -12,19 +13,15 @@
     <div class="mdc-card form-card mdc-elevation--z2">
         <form id="recipeForm" class="recipe-form">
             <!-- Ingredients Text Field -->
-            <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--textarea mdc-text-field--fullwidth" data-mdc-auto-init="MDCTextField">
-                <textarea 
-                    id="ingredients" 
-                    name="ingredients" 
-                    class="mdc-text-field__input"
-                    rows="4"
-                    aria-labelledby="ingredients-label"
-                    required
-                ></textarea>
+            <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--textarea mdc-text-field--fullwidth"
+                data-mdc-auto-init="MDCTextField">
+                <textarea id="ingredients" name="ingredients" class="mdc-text-field__input" rows="4"
+                    aria-labelledby="ingredients-label" required></textarea>
                 <div class="mdc-notched-outline">
                     <div class="mdc-notched-outline__leading"></div>
                     <div class="mdc-notched-outline__notch">
-                        <label class="mdc-floating-label" id="ingredients-label" for="ingredients">Available Ingredients *</label>
+                        <label class="mdc-floating-label" id="ingredients-label" for="ingredients">Available Ingredients
+                            *</label>
                     </div>
                     <div class="mdc-notched-outline__trailing"></div>
                 </div>
@@ -79,15 +76,8 @@
 
                 <!-- Serving Size -->
                 <div class="mdc-text-field mdc-text-field--outlined" data-mdc-auto-init="MDCTextField">
-                    <input 
-                        type="number" 
-                        id="serving_size" 
-                        name="serving_size" 
-                        class="mdc-text-field__input"
-                        min="1" 
-                        max="12" 
-                        value="4"
-                    >
+                    <input type="number" id="serving_size" name="serving_size" class="mdc-text-field__input" min="1"
+                        max="12" value="4">
                     <div class="mdc-notched-outline">
                         <div class="mdc-notched-outline__leading"></div>
                         <div class="mdc-notched-outline__notch">
@@ -117,28 +107,38 @@
     <!-- Loading Indicator -->
     <div id="loadingIndicator" class="mdc-card loading-card mdc-elevation--z2" style="display: none;">
         <div class="loading-content">
-            <div class="mdc-circular-progress mdc-circular-progress--indeterminate" data-mdc-auto-init="MDCCircularProgress">
+            <div class="mdc-circular-progress mdc-circular-progress--indeterminate"
+                data-mdc-auto-init="MDCCircularProgress">
                 <div class="mdc-circular-progress__determinate-container">
-                    <svg class="mdc-circular-progress__determinate-circle-graphic" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                        <circle class="mdc-circular-progress__determinate-track" cx="24" cy="24" r="18" stroke-width="4"/>
-                        <circle class="mdc-circular-progress__determinate-circle" cx="24" cy="24" r="18" stroke-dasharray="113.097" stroke-dashoffset="113.097" stroke-width="4"/>
+                    <svg class="mdc-circular-progress__determinate-circle-graphic" viewBox="0 0 48 48"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <circle class="mdc-circular-progress__determinate-track" cx="24" cy="24" r="18"
+                            stroke-width="4" />
+                        <circle class="mdc-circular-progress__determinate-circle" cx="24" cy="24" r="18"
+                            stroke-dasharray="113.097" stroke-dashoffset="113.097" stroke-width="4" />
                     </svg>
                 </div>
                 <div class="mdc-circular-progress__indeterminate-container">
                     <div class="mdc-circular-progress__spinner-layer">
                         <div class="mdc-circular-progress__circle-clipper mdc-circular-progress__circle-left">
-                            <svg class="mdc-circular-progress__indeterminate-circle-graphic" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                                <circle cx="24" cy="24" r="18" stroke-dasharray="113.097" stroke-dashoffset="56.549" stroke-width="4"/>
+                            <svg class="mdc-circular-progress__indeterminate-circle-graphic" viewBox="0 0 48 48"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="24" cy="24" r="18" stroke-dasharray="113.097" stroke-dashoffset="56.549"
+                                    stroke-width="4" />
                             </svg>
                         </div>
                         <div class="mdc-circular-progress__gap-patch">
-                            <svg class="mdc-circular-progress__indeterminate-circle-graphic" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                                <circle cx="24" cy="24" r="18" stroke-dasharray="113.097" stroke-dashoffset="56.549" stroke-width="3.2"/>
+                            <svg class="mdc-circular-progress__indeterminate-circle-graphic" viewBox="0 0 48 48"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="24" cy="24" r="18" stroke-dasharray="113.097" stroke-dashoffset="56.549"
+                                    stroke-width="3.2" />
                             </svg>
                         </div>
                         <div class="mdc-circular-progress__circle-clipper mdc-circular-progress__circle-right">
-                            <svg class="mdc-circular-progress__indeterminate-circle-graphic" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                                <circle cx="24" cy="24" r="18" stroke-dasharray="113.097" stroke-dashoffset="56.549" stroke-width="4"/>
+                            <svg class="mdc-circular-progress__indeterminate-circle-graphic" viewBox="0 0 48 48"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="24" cy="24" r="18" stroke-dasharray="113.097" stroke-dashoffset="56.549"
+                                    stroke-width="4" />
                             </svg>
                         </div>
                     </div>
@@ -210,7 +210,7 @@
 {{ define "scripts" }}
 <script>
     // Re-initialize MDC components after DOM update
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         mdc.autoInit();
     });
 </script>

@@ -6,11 +6,12 @@ image:
   pullPolicy: IfNotPresent
 
 deployment:
-  replicaCount: 1
+  replicaCount: 2
   containerPort: 8000
   env:
     GIN_MODE: release
     CLAUDE_MODEL: "claude-sonnet-4-20250514"
+    ALLOWED_ORIGINS: "https://recipes.k8s.blacktoaster.com"
   resources:
     limits:
       cpu: 500m
@@ -18,6 +19,16 @@ deployment:
     requests:
       cpu: 250m
       memory: 256Mi
+  livenessProbe:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  readinessProbe:
+    enabled: true
+    path: /ready
+    initialDelaySeconds: 5
+    periodSeconds: 5
 
 service:
   type: ClusterIP
@@ -53,6 +64,9 @@ certificate:
     group: cert-manager.io
   dnsNames:
     - recipes.k8s.blacktoaster.com
+
+monitoring:
+  enabled: true
 
 secrets:
   # For helm install --set, these will be automatically base64 encoded

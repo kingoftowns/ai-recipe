@@ -3,10 +3,10 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -14,13 +14,17 @@ import (
 	"recipe-ai/internal/models"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 type Handler struct {
-	db  *gorm.DB
-	cfg *config.Config
+	db            *gorm.DB
+	cfg           *config.Config
+	totalRecipes  prometheus.Gauge
+	dbConnections prometheus.GaugeVec
 }
 
 type AnthropicMessage struct {
@@ -43,10 +47,10 @@ type AnthropicResponse struct {
 }
 
 type RecipeRequest struct {
-	Ingredients          string `json:"ingredients"`
-	DietaryRestrictions  string `json:"dietary_restrictions"`
-	CuisinePreference    string `json:"cuisine_preference"`
-	ServingSize          int    `json:"serving_size"`
+	Ingredients         string `json:"ingredients"`
+	DietaryRestrictions string `json:"dietary_restrictions"`
+	CuisinePreference   string `json:"cuisine_preference"`
+	ServingSize         int    `json:"serving_size"`
 }
 
 type RecipeData struct {
@@ -71,19 +75,86 @@ type ValidateIngredientsRequest struct {
 }
 
 func New(db *gorm.DB, cfg *config.Config) *Handler {
-	return &Handler{
+	h := &Handler{
 		db:  db,
 		cfg: cfg,
 	}
+
+	h.totalRecipes = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "recipe_ai_total_recipes",
+		Help: "Total number of recipes in the database",
+	})
+
+	h.dbConnections = *prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "recipe_ai_db_connections",
+		Help: "Database connection statistics",
+	}, []string{"state"})
+
+	prometheus.MustRegister(h.totalRecipes)
+	prometheus.MustRegister(&h.dbConnections)
+
+	return h
 }
 
 func (h *Handler) Index(c *gin.Context) {
 	c.HTML(http.StatusOK, "index.html", nil)
 }
 
+func (h *Handler) Health(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"status":    "ok",
+		"timestamp": time.Now().UTC().Format(time.RFC3339),
+	})
+}
+
+func (h *Handler) Ready(c *gin.Context) {
+	sqlDB, err := h.db.DB()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"status":  "error",
+			"message": "database connection error",
+		})
+		return
+	}
+
+	if err := sqlDB.Ping(); err != nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"status":  "error",
+			"message": "database ping failed",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":    "ready",
+		"database":  "connected",
+		"timestamp": time.Now().UTC().Format(time.RFC3339),
+	})
+}
+
+func (h *Handler) Metrics(c *gin.Context) {
+	var totalRecipes int64
+	h.db.Model(&models.Recipe{}).Count(&totalRecipes)
+	h.totalRecipes.Set(float64(totalRecipes))
+
+	sqlDB, _ := h.db.DB()
+	stats := sqlDB.Stats()
+	h.dbConnections.WithLabelValues("open").Set(float64(stats.OpenConnections))
+	h.dbConnections.WithLabelValues("in_use").Set(float64(stats.InUse))
+	h.dbConnections.WithLabelValues("idle").Set(float64(stats.Idle))
+
+	promhttp.Handler().ServeHTTP(c.Writer, c.Request)
+}
+
 func (h *Handler) GenerateRecipe(c *gin.Context) {
+	logrus.WithFields(logrus.Fields{
+		"endpoint": "generate_recipe",
+		"ip":       c.ClientIP(),
+	}).Info("Recipe generation started")
+
 	var req RecipeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		logrus.WithError(err).Warn("Invalid request format for recipe generation")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
@@ -123,12 +194,27 @@ Please provide:
 
 Format the response in a clear, structured way.`, req.Ingredients, dietaryText, cuisineText, req.ServingSize)
 
+	logrus.WithFields(logrus.Fields{
+		"ingredients_count": len(strings.Split(req.Ingredients, ",")),
+		"serving_size":      req.ServingSize,
+		"cuisine":           req.CuisinePreference,
+		"dietary":           req.DietaryRestrictions,
+	}).Info("Calling Anthropic API for recipe generation")
+
 	recipeText, err := h.callAnthropicAPI(prompt)
 	if err != nil {
-		logrus.WithError(err).Error("Failed to generate recipe")
+		logrus.WithError(err).WithFields(logrus.Fields{
+			"model": h.cfg.ClaudeModel,
+			"ip":    c.ClientIP(),
+		}).Error("Failed to generate recipe")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to generate recipe: %v", err)})
 		return
 	}
+
+	logrus.WithFields(logrus.Fields{
+		"response_length": len(recipeText),
+		"ip":              c.ClientIP(),
+	}).Info("Recipe generated successfully")
 
 	recipeData := RecipeData{
 		Recipe:              recipeText,
@@ -143,13 +229,20 @@ Format the response in a clear, structured way.`, req.Ingredients, dietaryText, 
 }
 
 func (h *Handler) SaveRecipe(c *gin.Context) {
+	logrus.WithFields(logrus.Fields{
+		"endpoint": "save_recipe",
+		"ip":       c.ClientIP(),
+	}).Info("Recipe save started")
+
 	var req SaveRecipeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		logrus.WithError(err).Warn("Invalid request format for recipe save")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
 
 	if req.RecipeData.Recipe == "" {
+		logrus.WithField("ip", c.ClientIP()).Warn("Empty recipe data provided")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No recipe data provided"})
 		return
 	}
@@ -169,10 +262,16 @@ func (h *Handler) SaveRecipe(c *gin.Context) {
 	}
 
 	if err := h.db.Create(&recipe).Error; err != nil {
-		logrus.WithError(err).Error("Failed to save recipe")
+		logrus.WithError(err).WithField("ip", c.ClientIP()).Error("Failed to save recipe")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save recipe"})
 		return
 	}
+
+	logrus.WithFields(logrus.Fields{
+		"recipe_id": recipe.ID,
+		"title":     recipe.Title,
+		"ip":        c.ClientIP(),
+	}).Info("Recipe saved successfully")
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":   "Recipe saved successfully",
@@ -183,7 +282,7 @@ func (h *Handler) SaveRecipe(c *gin.Context) {
 
 func (h *Handler) ExportRecipe(c *gin.Context) {
 	format := c.Param("format")
-	
+
 	var req ExportRecipeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
@@ -217,10 +316,10 @@ Cuisine Preference: %s
 Serving Size: %d
 
 %s
-`, req.RecipeData.Timestamp, req.RecipeData.IngredientsUsed, 
-		getStringValue(req.RecipeData.DietaryRestrictions, "None"),
-		getStringValue(req.RecipeData.CuisinePreference, "Any"),
-		req.RecipeData.ServingSize, req.RecipeData.Recipe)
+`, req.RecipeData.Timestamp, req.RecipeData.IngredientsUsed,
+			getStringValue(req.RecipeData.DietaryRestrictions, "None"),
+			getStringValue(req.RecipeData.CuisinePreference, "Any"),
+			req.RecipeData.ServingSize, req.RecipeData.Recipe)
 
 		c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="recipe_%s.txt"`, timestamp))
 		c.Data(http.StatusOK, "text/plain", []byte(textContent))
@@ -269,18 +368,17 @@ func (h *Handler) ValidateIngredients(c *gin.Context) {
 }
 
 func (h *Handler) GetRecipes(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	perPage, _ := strconv.Atoi(c.DefaultQuery("per_page", "10"))
-	search := c.Query("search")
-
-	if page < 1 {
+	page, exists := c.Get("page")
+	if !exists {
 		page = 1
 	}
-	if perPage < 1 || perPage > 100 {
+	perPage, exists := c.Get("per_page")
+	if !exists {
 		perPage = 10
 	}
+	search := c.Query("search")
 
-	offset := (page - 1) * perPage
+	offset := (page.(int) - 1) * perPage.(int)
 
 	query := h.db.Model(&models.Recipe{})
 
@@ -290,17 +388,17 @@ func (h *Handler) GetRecipes(c *gin.Context) {
 			searchPattern, searchPattern, searchPattern, searchPattern)
 	}
 
-	var total int
+	var total int64
 	query.Count(&total)
 
 	var recipes []models.Recipe
-	if err := query.Order("created_at DESC").Offset(offset).Limit(perPage).Find(&recipes).Error; err != nil {
+	if err := query.Order("created_at DESC").Offset(offset).Limit(perPage.(int)).Find(&recipes).Error; err != nil {
 		logrus.WithError(err).Error("Failed to fetch recipes")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch recipes"})
 		return
 	}
 
-	pages := (total + perPage - 1) / perPage
+	pages := (int(total) + perPage.(int) - 1) / perPage.(int)
 
 	c.JSON(http.StatusOK, gin.H{
 		"recipes":      recipes,
@@ -312,16 +410,15 @@ func (h *Handler) GetRecipes(c *gin.Context) {
 }
 
 func (h *Handler) GetRecipe(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
+	id, exists := c.Get("id")
+	if !exists {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid recipe ID"})
 		return
 	}
 
 	var recipe models.Recipe
-	if err := h.db.First(&recipe, uint(id)).Error; err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+	if err := h.db.First(&recipe, id.(uint)).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Recipe not found"})
 		} else {
 			logrus.WithError(err).Error("Failed to fetch recipe")
@@ -334,14 +431,13 @@ func (h *Handler) GetRecipe(c *gin.Context) {
 }
 
 func (h *Handler) DeleteRecipe(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
+	id, exists := c.Get("id")
+	if !exists {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid recipe ID"})
 		return
 	}
 
-	if err := h.db.Delete(&models.Recipe{}, uint(id)).Error; err != nil {
+	if err := h.db.Delete(&models.Recipe{}, id.(uint)).Error; err != nil {
 		logrus.WithError(err).Error("Failed to delete recipe")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete recipe"})
 		return

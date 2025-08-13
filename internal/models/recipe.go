@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type Recipe struct {
@@ -24,7 +24,7 @@ func (Recipe) TableName() string {
 	return "recipes"
 }
 
-func (r *Recipe) BeforeCreate(scope *gorm.Scope) error {
+func (r *Recipe) BeforeCreate(tx *gorm.DB) error {
 	if r.Title == "" {
 		r.Title = ExtractTitleFromContent(r.RecipeContent)
 	}

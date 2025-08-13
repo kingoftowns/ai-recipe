@@ -1,15 +1,19 @@
 # Recipe AI
 
-A Go-based recipe generation application using Anthropic's Claude API.
+A production-ready Go-based recipe generation application using Anthropic's Claude AI.
 
 ## Features
 
-- Generate recipes based on ingredients, dietary restrictions, and cuisine preferences
-- Save and manage recipes in PostgreSQL database
-- Export recipes to JSON and text formats
-- Validate ingredient lists
-- RESTful API for recipe management
-- Modern web interface
+- 🤖 AI-powered recipe generation using Claude API
+- 🥗 Support for dietary restrictions and cuisine preferences
+- 💾 Save and manage recipes in PostgreSQL database
+- 📤 Export recipes to JSON and text formats
+- ✅ Real-time ingredient validation
+- 🔄 RESTful API for recipe management
+- 🎨 Modern Material Design web interface
+- 🛡️ Production-ready security features
+- 📊 Health checks and observability endpoints
+- ⚡ Rate limiting and input validation
 
 ## Development Setup
 
@@ -38,25 +42,49 @@ A Go-based recipe generation application using Anthropic's Claude API.
 
 ## Configuration
 
-Environment variables:
+### Required Environment Variables
 
 - `DATABASE_URL`: PostgreSQL connection string
-- `ANTHROPIC_API_KEY`: Your Anthropic API key
-- `CLAUDE_MODEL`: Claude model to use (default: claude-sonnet-4-20250514)
-- `SECRET_KEY`: Application secret key
+- `ANTHROPIC_API_KEY`: Your Anthropic API key (required)
+- `SECRET_KEY`: Application secret key (required for production)
+
+### Optional Environment Variables
+
+- `CLAUDE_MODEL`: Claude model to use (default: claude-3-haiku-20240307)
 - `GIN_MODE`: Gin framework mode (debug/release)
 - `PORT`: Server port (default: 8000)
+- `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins (default: http://localhost:3000,http://localhost:8000)
+
+### Security Features
+
+- **CORS Protection**: Configurable allowed origins
+- **Rate Limiting**: 
+  - Recipe generation: 5 requests/minute per IP
+  - API endpoints: 100 requests/minute per IP
+- **Input Validation**: All endpoints have comprehensive validation
+- **Error Recovery**: Graceful panic recovery with logging
+- **Structured Logging**: JSON logging in production, human-readable in development
 
 ## API Endpoints
 
+### Public Endpoints
+- `GET /health`: Health check endpoint
+- `GET /ready`: Readiness check (includes database connectivity)
+- `GET /metrics`: Application metrics
 - `GET /`: Web interface
-- `POST /generate_recipe`: Generate a new recipe
+
+### Recipe Management
+- `POST /generate_recipe`: Generate a new recipe (rate-limited)
 - `POST /save_recipe`: Save a recipe to database
 - `POST /export_recipe/:format`: Export recipe (json/txt)
 - `POST /validate_ingredients`: Validate ingredient list
+
+### API Routes
 - `GET /api/recipes`: List all recipes (with pagination and search)
 - `GET /api/recipes/:id`: Get specific recipe
 - `DELETE /api/recipes/:id`: Delete recipe
+
+All API routes have rate limiting (100 req/min) and input validation.
 
 ## Debugging
 
@@ -87,13 +115,44 @@ go run cmd/migrate/main.go -direction=down -steps=1
 
 ```bash
 # Build binary
-go build -o recipe-ai main.go
+CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o recipe-ai main.go
 
-# Set production environment
+# Set required environment variables
 export GIN_MODE=release
 export DATABASE_URL="your-production-db-url"
 export ANTHROPIC_API_KEY="your-production-api-key"
+export SECRET_KEY="your-secure-secret-key"
+export ALLOWED_ORIGINS="https://yourdomain.com"
 
-# Run
+# Optional production settings
+export CLAUDE_MODEL="claude-3-haiku-20240307"
+export PORT="8000"
+
+# Run migrations
+./migrate -direction=up
+
+# Run application
 ./recipe-ai
 ```
+
+## Kubernetes Deployment
+
+The application includes Helm charts for Kubernetes deployment:
+
+```bash
+# Deploy with Helm
+helm install recipe-ai ./helm \
+  --set secrets.anthropicApiKey="your-api-key" \
+  --set secrets.secretKey="your-secret-key" \
+  --set ingress.hosts[0].host="your-domain.com"
+```
+
+### Production Checklist
+
+- ✅ Environment variables configured
+- ✅ Database migrations applied
+- ✅ CORS origins restricted to your domain
+- ✅ Rate limiting configured
+- ✅ Logging level set to INFO
+- ✅ Health checks responding
+- ✅ SSL/TLS certificates configured
