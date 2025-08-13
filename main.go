@@ -70,6 +70,7 @@ func main() {
 	{
 		api.GET("/recipes", v.ValidatePagination(), h.GetRecipes)
 		api.GET("/recipes/:id", v.ValidateIDParam(), h.GetRecipe)
+		api.PUT("/recipes/:id", v.ValidateIDParam(), h.UpdateRecipe)
 		api.DELETE("/recipes/:id", v.ValidateIDParam(), h.DeleteRecipe)
 		api.PUT("/recipes/:id/rating", v.ValidateIDParam(), h.UpdateRecipeRating)
 	}

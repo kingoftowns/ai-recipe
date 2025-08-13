@@ -153,16 +153,19 @@
         <div class="recipe-header">
             <h3 class="mdc-typography--headline5">Your Generated Recipe</h3>
             <div class="recipe-actions">
-                <button onclick="saveRecipe()" class="mdc-icon-button material-icons">
+                <button onclick="saveRecipe()" class="mdc-icon-button material-icons" title="Save Recipe">
                     save
                 </button>
-                <button onclick="exportRecipe('txt')" class="mdc-icon-button material-icons">
+                <button onclick="editRecipe()" class="mdc-icon-button material-icons" title="Edit Recipe" style="display: none;" id="editRecipeBtn">
+                    edit
+                </button>
+                <button onclick="exportRecipe('txt')" class="mdc-icon-button material-icons" title="Export as Text">
                     description
                 </button>
-                <button onclick="exportRecipe('json')" class="mdc-icon-button material-icons">
+                <button onclick="exportRecipe('json')" class="mdc-icon-button material-icons" title="Export as JSON">
                     code
                 </button>
-                <button onclick="copyRecipe()" class="mdc-icon-button material-icons">
+                <button onclick="copyRecipe()" class="mdc-icon-button material-icons" title="Copy to Clipboard">
                     content_copy
                 </button>
             </div>
@@ -221,6 +224,110 @@
         
         <div id="savedRecipesList" class="saved-recipes-list">
             <div class="loading-message">Start typing to search recipes, or click "Load All" to see all saved recipes</div>
+        </div>
+    </div>
+
+    <!-- Edit Recipe Modal -->
+    <div id="editRecipeModal" class="edit-modal" style="display: none;">
+        <div class="edit-modal-backdrop" onclick="closeEditModal()"></div>
+        <div class="edit-modal-content mdc-card mdc-elevation--z8">
+            <div class="edit-modal-header">
+                <h3 class="mdc-typography--headline5">Edit Recipe</h3>
+                <button onclick="closeEditModal()" class="mdc-icon-button material-icons">
+                    close
+                </button>
+            </div>
+            <div class="edit-modal-body">
+                <!-- Recipe Content -->
+                <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--textarea mdc-text-field--fullwidth" data-mdc-auto-init="MDCTextField">
+                    <textarea id="editRecipeContent" class="mdc-text-field__input" rows="15" aria-labelledby="edit-recipe-content-label"></textarea>
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__notch">
+                            <label class="mdc-floating-label" id="edit-recipe-content-label" for="editRecipeContent">Recipe Content</label>
+                        </div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                </div>
+
+                <!-- Ingredients Used -->
+                <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--textarea mdc-text-field--fullwidth" data-mdc-auto-init="MDCTextField" style="margin-top: 16px;">
+                    <textarea id="editIngredientsUsed" class="mdc-text-field__input" rows="3" aria-labelledby="edit-ingredients-label"></textarea>
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__notch">
+                            <label class="mdc-floating-label" id="edit-ingredients-label" for="editIngredientsUsed">Ingredients Used</label>
+                        </div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                </div>
+
+                <!-- Form Row for other fields -->
+                <div class="form-row" style="margin-top: 16px;">
+                    <!-- Dietary Restrictions -->
+                    <div class="select-wrapper">
+                        <label class="select-label" for="editDietaryRestrictions">Dietary Restrictions</label>
+                        <div class="select-container">
+                            <select id="editDietaryRestrictions" class="material-select">
+                                <option value="">None</option>
+                                <option value="vegetarian">Vegetarian</option>
+                                <option value="vegan">Vegan</option>
+                                <option value="gluten-free">Gluten-Free</option>
+                                <option value="dairy-free">Dairy-Free</option>
+                                <option value="keto">Keto</option>
+                                <option value="paleo">Paleo</option>
+                                <option value="low-carb">Low-Carb</option>
+                                <option value="nut-free">Nut-Free</option>
+                            </select>
+                            <i class="material-icons select-icon">arrow_drop_down</i>
+                        </div>
+                    </div>
+
+                    <!-- Cuisine Preference -->
+                    <div class="select-wrapper">
+                        <label class="select-label" for="editCuisinePreference">Cuisine Preference</label>
+                        <div class="select-container">
+                            <select id="editCuisinePreference" class="material-select">
+                                <option value="">Any Cuisine</option>
+                                <option value="italian">Italian</option>
+                                <option value="mexican">Mexican</option>
+                                <option value="chinese">Chinese</option>
+                                <option value="indian">Indian</option>
+                                <option value="japanese">Japanese</option>
+                                <option value="thai">Thai</option>
+                                <option value="mediterranean">Mediterranean</option>
+                                <option value="american">American</option>
+                                <option value="french">French</option>
+                                <option value="korean">Korean</option>
+                            </select>
+                            <i class="material-icons select-icon">arrow_drop_down</i>
+                        </div>
+                    </div>
+
+                    <!-- Serving Size -->
+                    <div class="mdc-text-field mdc-text-field--outlined" data-mdc-auto-init="MDCTextField">
+                        <input type="number" id="editServingSize" class="mdc-text-field__input" min="1" max="12" value="4">
+                        <div class="mdc-notched-outline">
+                            <div class="mdc-notched-outline__leading"></div>
+                            <div class="mdc-notched-outline__notch">
+                                <label class="mdc-floating-label" for="editServingSize">Serving Size</label>
+                            </div>
+                            <div class="mdc-notched-outline__trailing"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <button onclick="closeEditModal()" class="mdc-button mdc-button--outlined">
+                    <span class="mdc-button__ripple"></span>
+                    <span class="mdc-button__label">Cancel</span>
+                </button>
+                <button onclick="saveEditedRecipe()" class="mdc-button mdc-button--raised">
+                    <span class="mdc-button__ripple"></span>
+                    <i class="material-icons mdc-button__icon" aria-hidden="true">save</i>
+                    <span class="mdc-button__label">Save Changes</span>
+                </button>
+            </div>
         </div>
     </div>
 

@@ -177,6 +177,8 @@ async function generateRecipe() {
             currentRecipeData = data;
             displayRecipe(data);
             showElement('recipeResult');
+            // Hide edit button for new recipes (no ID yet)
+            hideElement('editRecipeBtn');
             // Animate the recipe card
             const recipeCard = document.getElementById('recipeResult');
             recipeCard.style.animation = 'fadeIn 0.5s ease-out';
@@ -475,13 +477,16 @@ async function viewSavedRecipe(recipeId) {
                 serving_size: recipe.serving_size
             };
             
-            // Store the recipe ID for rating functionality
+            // Store the recipe ID for rating functionality and editing
             currentRecipeData.id = recipe.id;
             currentRecipeData.rating = recipe.rating;
             
             displayRecipe(currentRecipeData);
             showElement('recipeResult');
             showElement('recipeRating');
+            
+            // Show edit button for saved recipes
+            showElement('editRecipeBtn');
             
             // Setup star rating for saved recipe
             setupStarRating(recipe.rating);
@@ -518,6 +523,116 @@ async function deleteSavedRecipe(recipeId) {
     } catch (error) {
         showError('Error deleting recipe');
         console.error('Error deleting recipe:', error);
+    }
+}
+
+// Edit Recipe Functions
+function editRecipe() {
+    if (!currentRecipeData) {
+        showError('No recipe to edit');
+        return;
+    }
+    
+    // Populate the edit form with current recipe data
+    document.getElementById('editRecipeContent').value = currentRecipeData.recipe || '';
+    document.getElementById('editIngredientsUsed').value = currentRecipeData.ingredients_used || '';
+    document.getElementById('editDietaryRestrictions').value = currentRecipeData.dietary_restrictions || '';
+    document.getElementById('editCuisinePreference').value = currentRecipeData.cuisine_preference || '';
+    document.getElementById('editServingSize').value = currentRecipeData.serving_size || 4;
+    
+    // Show the modal
+    showElement('editRecipeModal');
+    
+    // Re-initialize MDC components for the modal
+    setTimeout(() => {
+        document.querySelectorAll('#editRecipeModal .mdc-text-field').forEach(textField => {
+            if (!textField.mdcTextField) {
+                textField.mdcTextField = new mdc.textField.MDCTextField(textField);
+            }
+        });
+        
+        // Focus on the recipe content field
+        const recipeContentField = document.getElementById('editRecipeContent');
+        if (recipeContentField) {
+            recipeContentField.focus();
+        }
+    }, 100);
+}
+
+function closeEditModal() {
+    hideElement('editRecipeModal');
+}
+
+async function saveEditedRecipe() {
+    if (!currentRecipeData || !currentRecipeData.id) {
+        showError('No recipe ID found. Cannot save changes.');
+        return;
+    }
+    
+    // Get form data
+    const recipeContent = document.getElementById('editRecipeContent').value.trim();
+    const ingredientsUsed = document.getElementById('editIngredientsUsed').value.trim();
+    const dietaryRestrictions = document.getElementById('editDietaryRestrictions').value;
+    const cuisinePreference = document.getElementById('editCuisinePreference').value;
+    const servingSize = parseInt(document.getElementById('editServingSize').value);
+    
+    // Validate required fields
+    if (!recipeContent) {
+        showError('Recipe content cannot be empty');
+        return;
+    }
+    
+    if (!ingredientsUsed) {
+        showError('Ingredients cannot be empty');
+        return;
+    }
+    
+    if (isNaN(servingSize) || servingSize <= 0) {
+        showError('Please enter a valid serving size');
+        return;
+    }
+    
+    // Prepare update data
+    const updateData = {
+        recipe_content: recipeContent,
+        ingredients_used: ingredientsUsed,
+        dietary_restrictions: dietaryRestrictions || null,
+        cuisine_preference: cuisinePreference || null,
+        serving_size: servingSize
+    };
+    
+    try {
+        const response = await fetch(`/api/recipes/${currentRecipeData.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updateData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Update the current recipe data
+            currentRecipeData.recipe = recipeContent;
+            currentRecipeData.ingredients_used = ingredientsUsed;
+            currentRecipeData.dietary_restrictions = dietaryRestrictions;
+            currentRecipeData.cuisine_preference = cuisinePreference;
+            currentRecipeData.serving_size = servingSize;
+            
+            // Refresh the display
+            displayRecipe(currentRecipeData);
+            
+            // Close the modal
+            closeEditModal();
+            
+            showSuccess('Recipe updated successfully!');
+        } else {
+            showError(data.error || 'Failed to update recipe');
+        }
+    } catch (error) {
+        showError('Failed to update recipe');
+        console.error('Error updating recipe:', error);
     }
 }
 
@@ -672,6 +787,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Add ripple effects
     addRippleEffect();
+    
+    // Add keyboard event listeners
+    document.addEventListener('keydown', (e) => {
+        // Close modal on Escape key
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('editRecipeModal');
+            if (modal && modal.style.display !== 'none') {
+                closeEditModal();
+            }
+        }
+    });
     
     // Set focus on ingredients field after a short delay for MDC to initialize
     setTimeout(() => {

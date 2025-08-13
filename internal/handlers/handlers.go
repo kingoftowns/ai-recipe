@@ -379,14 +379,27 @@ func (h *Handler) GetRecipes(c *gin.Context) {
 	search := c.Query("search")
 	minRating := c.Query("min_rating")
 
+	logrus.WithFields(logrus.Fields{
+		"search":     search,
+		"min_rating": minRating,
+		"page":       page,
+		"per_page":   perPage,
+	}).Info("GetRecipes request parameters")
+
 	offset := (page.(int) - 1) * perPage.(int)
 
 	query := h.db.Model(&models.Recipe{})
 
 	if search != "" {
 		searchPattern := "%" + search + "%"
-		query = query.Where("title ILIKE ? OR recipe_content ILIKE ?",
-			searchPattern, searchPattern)
+		logrus.WithFields(logrus.Fields{
+			"search_term": search,
+			"pattern":     searchPattern,
+		}).Info("Executing search query")
+		
+		// Search in title, ingredients_used, or check if term appears before "Step-by-Step Instructions" section
+		query = query.Where("title ILIKE ? OR ingredients_used ILIKE ? OR (recipe_content ILIKE ? AND (POSITION(UPPER(?) IN UPPER(recipe_content)) < POSITION('STEP-BY-STEP INSTRUCTIONS' IN UPPER(recipe_content)) OR POSITION('STEP-BY-STEP INSTRUCTIONS' IN UPPER(recipe_content)) = 0))",
+			searchPattern, searchPattern, searchPattern, search)
 	}
 
 	if minRating != "" {
@@ -402,6 +415,12 @@ func (h *Handler) GetRecipes(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch recipes"})
 		return
 	}
+
+	logrus.WithFields(logrus.Fields{
+		"search_term":   search,
+		"total_results": total,
+		"results_count": len(recipes),
+	}).Info("Search query completed")
 
 	pages := (int(total) + perPage.(int) - 1) / perPage.(int)
 
@@ -488,6 +507,99 @@ func (h *Handler) UpdateRecipeRating(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Recipe rating updated successfully",
 		"rating":  req.Rating,
+	})
+}
+
+func (h *Handler) UpdateRecipe(c *gin.Context) {
+	id, exists := c.Get("id")
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid recipe ID"})
+		return
+	}
+
+	var req struct {
+		RecipeContent       string  `json:"recipe_content"`
+		IngredientsUsed     string  `json:"ingredients_used"`
+		DietaryRestrictions *string `json:"dietary_restrictions"`
+		CuisinePreference   *string `json:"cuisine_preference"`
+		ServingSize         int     `json:"serving_size"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logrus.WithError(err).Warn("Invalid request format for recipe update")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	if req.RecipeContent == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Recipe content cannot be empty"})
+		return
+	}
+
+	if req.IngredientsUsed == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ingredients cannot be empty"})
+		return
+	}
+
+	if req.ServingSize <= 0 {
+		req.ServingSize = 4
+	}
+
+	// Get the existing recipe to check if it exists
+	var existingRecipe models.Recipe
+	if err := h.db.First(&existingRecipe, id.(uint)).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Recipe not found"})
+		} else {
+			logrus.WithError(err).Error("Failed to fetch recipe for update")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch recipe"})
+		}
+		return
+	}
+
+	// Update the recipe
+	updates := map[string]interface{}{
+		"recipe_content":   req.RecipeContent,
+		"ingredients_used": req.IngredientsUsed,
+		"serving_size":     req.ServingSize,
+		"updated_at":       time.Now(),
+	}
+
+	// Handle optional fields
+	if req.DietaryRestrictions != nil {
+		updates["dietary_restrictions"] = req.DietaryRestrictions
+	}
+	if req.CuisinePreference != nil {
+		updates["cuisine_preference"] = req.CuisinePreference
+	}
+
+	// Update title based on new content
+	newTitle := models.ExtractTitleFromContent(req.RecipeContent)
+	updates["title"] = newTitle
+
+	if err := h.db.Model(&existingRecipe).Updates(updates).Error; err != nil {
+		logrus.WithError(err).WithField("recipe_id", id.(uint)).Error("Failed to update recipe")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update recipe"})
+		return
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"recipe_id": id.(uint),
+		"title":     newTitle,
+		"ip":        c.ClientIP(),
+	}).Info("Recipe updated successfully")
+
+	// Return the updated recipe
+	var updatedRecipe models.Recipe
+	if err := h.db.First(&updatedRecipe, id.(uint)).Error; err != nil {
+		logrus.WithError(err).Error("Failed to fetch updated recipe")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch updated recipe"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Recipe updated successfully",
+		"recipe":  updatedRecipe,
 	})
 }
 

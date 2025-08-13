@@ -3,7 +3,7 @@ namespace: recipe-ai
 image:
   repository: registry.k8s.blacktoaster.com/ai-recipe/ai-recipe
   tag: latest
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 deployment:
   replicaCount: 2
