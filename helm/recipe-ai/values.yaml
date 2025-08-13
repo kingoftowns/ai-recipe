@@ -13,6 +13,7 @@ deployment:
   containerPort: 8000
   env:
     FLASK_ENV: production
+    CLAUDE_MODEL: "claude-sonnet-4-20250514"
   resources:
     limits:
       cpu: 500m
